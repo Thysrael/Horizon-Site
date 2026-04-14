@@ -118,6 +118,47 @@ function GlowingOrb() {
   );
 }
 
+function MobileMenu() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="md:hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+      >
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-lg py-4 px-4">
+          <div className="flex flex-col gap-3">
+            <Link href="/" className="px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
+              Sources
+            </Link>
+            <Link href="/doc" className="px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
+              Documents
+            </Link>
+            <Link href="/about" className="px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors">
+              About
+            </Link>
+            <hr className="border-gray-100" />
+            <button className="px-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-left">
+              Login
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TabView() {
   const [activeTab, setActiveTab] = useState<'demo' | 'community' | 'contributors'>('community');
 
@@ -398,14 +439,15 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
+          <div className="flex items-center gap-2">
+            <button className="hidden sm:block rounded-full px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors">
               Login
             </button>
-            <button className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-105 transition-all">
+            <button className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-3 py-2 sm:px-4 text-sm font-medium text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-105 transition-all">
               <span className="text-lg leading-none">+</span>
-              <span>Submit</span>
+              <span className="hidden sm:inline">Submit</span>
             </button>
+            <MobileMenu />
           </div>
         </div>
       </nav>
