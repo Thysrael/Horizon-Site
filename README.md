@@ -36,11 +36,23 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 
-## Arch
+## Functions
 
 - Auth
 - Submit
 - Rank
-- assembly
+- Profile(a collection of)
 - Dashboard
 - Query
+- Comment
+
+## UI
+
+### Navigate Bar
+
+- search
+- sources
+- doc
+- demo
+- login
+- submit

@@ -24,3 +24,43 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.logo-wrapper {
+  position: relative;
+}
+
+.logo-shape {
+  stroke-dasharray: 70 240;
+  stroke-dashoffset: -170;
+  stroke-width: 3px;
+  transition: stroke-width 1s, stroke-dashoffset 1s, stroke-dasharray 1s;
+}
+
+.logo-wrapper:hover .logo-shape {
+  stroke-width: 1px;
+  stroke-dashoffset: 0;
+  stroke-dasharray: 310;
+}
+
+.logo-wrapper:hover .logo-shape {
+  stroke-width: 1px;
+  stroke-dashoffset: 0;
+  stroke-dasharray: 320;
+}
+
+.logo-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  color: #111827;
+  pointer-events: none;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
