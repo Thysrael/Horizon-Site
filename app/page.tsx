@@ -23,9 +23,10 @@ function TypingSubtitle() {
 
   useEffect(() => {
     if (displayText.length < fullText.length) {
+      const randomDelay = 30 + Math.random() * 120;
       const timeout = setTimeout(() => {
         setDisplayText(fullText.slice(0, displayText.length + 1));
-      }, 100);
+      }, randomDelay);
       return () => clearTimeout(timeout);
     } else {
       setIsTypingComplete(true);
@@ -33,22 +34,22 @@ function TypingSubtitle() {
   }, [displayText]);
 
   useEffect(() => {
-    if (isTypingComplete) {
-      const interval = setInterval(() => {
-        setShowCursor((prev) => !prev);
-      }, 530);
-      return () => clearInterval(interval);
-    }
-  }, [isTypingComplete]);
+    const interval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 600);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <p className="mt-6 text-xl text-gray-500 font-medium relative inline-block">
-      {displayText}
-      <span
-        className={`absolute right-[-4px] top-1/2 -translate-y-1/2 w-0.5 h-6 bg-orange-500 transition-opacity duration-100 ${
-          showCursor ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
+    <p className="mt-6 text-xl text-gray-500 font-medium">
+      <span className="relative inline-block">
+        {displayText}
+        <span
+          className={`absolute -right-1 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-orange-500 transition-opacity duration-75 ${
+            showCursor ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      </span>
     </p>
   );
 }
@@ -58,17 +59,47 @@ function AnimatedSlogan() {
     <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl cursor-default leading-tight">
       <span className="block mb-4 text-gray-900">
         Enjoy the{' '}
-        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 group">
+        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-600 via-orange-700 to-orange-300 bg-[length:300%_auto] animate-gradient-flow group">
           News
-          <span className="absolute -bottom-1 left-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 w-0 group-hover:w-full transition-all duration-500 ease-out rounded-full" />
+          <svg className="absolute -bottom-1 left-0 w-0 group-hover:w-full transition-all duration-250 ease-out h-3 overflow-visible" viewBox="0 0 100 10" preserveAspectRatio="none">
+            <path
+              d="M0 8 Q 50 2, 100 8"
+              stroke="url(#handdrawn-gradient)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              fill="none"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            />
+            <defs>
+              <linearGradient id="handdrawn-gradient" x1="0" y1="0" x2="100" y2="0">
+                <stop stopColor="#f97316" />
+                <stop offset="1" stopColor="#dc2626" />
+              </linearGradient>
+            </defs>
+          </svg>
         </span>
         {' '}itself
       </span>
       <span className="text-gray-900">
-        Leave the others to{' '}
-        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 group">
+        Leave others to{' '}
+        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-600 via-orange-700 to-orange-300 bg-[length:300%_auto] animate-gradient-flow group">
           Horizon
-          <span className="absolute -bottom-1 left-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 w-0 group-hover:w-full transition-all duration-500 ease-out rounded-full" />
+          <svg className="absolute -bottom-1 left-0 w-0 group-hover:w-full transition-all duration-250 ease-out h-3 overflow-visible" viewBox="0 0 120 10" preserveAspectRatio="none">
+            <path
+              d="M0 8 Q 60 2, 120 8"
+              stroke="url(#handdrawn-gradient2)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              fill="none"
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            />
+            <defs>
+              <linearGradient id="handdrawn-gradient2" x1="0" y1="0" x2="120" y2="0">
+                <stop stopColor="#f97316" />
+                <stop offset="1" stopColor="#dc2626" />
+              </linearGradient>
+            </defs>
+          </svg>
         </span>
       </span>
     </h1>
@@ -171,7 +202,7 @@ function MobileMenu() {
 }
 
 function TabView() {
-  const [activeTab, setActiveTab] = useState<'demo' | 'community' | 'contributors'>('community');
+  const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors'>('community');
 
   return (
     <div>
@@ -300,7 +331,7 @@ function TabView() {
           <div className="mx-auto max-w-3xl rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 
             <div className="divide-y divide-gray-100">
-              {sources.slice(0, 5).map((source, index) => (
+              {sources.slice(0, 10).map((source, index) => (
                 <article
                   key={index}
                   className="group flex items-center gap-4 py-4 transition-colors hover:bg-gray-50/50"

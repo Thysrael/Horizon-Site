@@ -73,3 +73,51 @@ body {
     transform: translateY(-15px);
   }
 }
+
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  12.5% {
+    background-position: 25% 50%;
+  }
+  25% {
+    background-position: 50% 50%;
+  }
+  37.5% {
+    background-position: 75% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  62.5% {
+    background-position: 75% 50%;
+  }
+  75% {
+    background-position: 50% 50%;
+  }
+  87.5% {
+    background-position: 25% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-flow {
+  background-size: 300% auto;
+  animation: gradient-flow 1s linear infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
