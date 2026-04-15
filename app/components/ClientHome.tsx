@@ -22,9 +22,9 @@ interface Source {
 }
 
 interface Contributor {
-  name: string;
-  avatar: string;
-  url: string;
+  id: string;
+  name: string | null;
+  image: string | null;
 }
 
 function getSourceIcon(type: string, iconUrl?: string | null): string {
@@ -308,9 +308,10 @@ export function MobileMenu() {
 
 interface TabViewProps {
   sources: Source[];
+  contributors: Contributor[];
 }
 
-export function TabView({ sources }: TabViewProps) {
+export function TabView({ sources, contributors }: TabViewProps) {
   const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors'>('community');
 
   return (
@@ -355,7 +356,7 @@ export function TabView({ sources }: TabViewProps) {
       ) : activeTab === 'community' ? (
         <SourcesTab sources={sources} />
       ) : (
-        <ContributorsTab />
+        <ContributorsTab contributors={contributors} />
       )}
     </div>
   );
@@ -546,97 +547,46 @@ function SourcesTab({ sources }: SourcesTabProps) {
   );
 }
 
-function ContributorsTab() {
-  const contributors: Contributor[] = [
-    {
-      name: "hyggge",
-      avatar: "https://hyggge.github.io/medias/avatar.jpg",
-      url: "https://hyggge.github.io/",
-    },
-    {
-      name: "Dovahkiin",
-      avatar: "https://the-tarnished.github.io/medias/avatar.jpg",
-      url: "https://the-tarnished.github.io/",
-    },
-    {
-      name: "saltyfishyjk",
-      avatar: "https://saltyfishyjk.github.io/img/EMT.png",
-      url: "https://saltyfishyjk.github.io/",
-    },
-    {
-      name: "musel",
-      avatar: "https://mmmusel.github.io/avatar/photo.jpg",
-      url: "https://mmmusel.github.io/",
-    },
-    {
-      name: "Zhang-kg",
-      avatar: "https://zhang-kg.github.io/2023%E5%A4%B4%E5%83%8F.jpg",
-      url: "https://zhang-kg.github.io/",
-    },
-    {
-      name: "Master Tan",
-      avatar: "https://avatars.githubusercontent.com/u/75460510?v=4",
-      url: "https://master-tan.github.io/",
-    },
-    {
-      name: "roife",
-      avatar: "https://avatars.githubusercontent.com/u/17700217?v=4",
-      url: "https://roife.github.io/",
-    },
-    {
-      name: "Coekjan",
-      avatar: "https://avatars.githubusercontent.com/u/69834864?v=4",
-      url: "https://coekjan.github.io/",
-    },
-    {
-      name: "Gwok Hiujin",
-      avatar: "https://avatars.githubusercontent.com/u/70586936?v=4",
-      url: "https://gwokhiujin.github.io/",
-    },
-    {
-      name: "chlience",
-      avatar: "https://avatars.githubusercontent.com/u/22586392?v=4",
-      url: "https://chlience.com/",
-    },
-    {
-      name: "Linyu",
-      avatar: "https://avatars.githubusercontent.com/u/94553312?v=4",
-      url: "https://www.linyu.cool/",
-    },
-  ];
+interface ContributorsTabProps {
+  contributors: Contributor[];
+}
 
+function ContributorsTab({ contributors }: ContributorsTabProps) {
   return (
     <div>
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Contributors</h2>
         <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-          Thanks to these amazing people who have contributed to Horizon.
+          Thanks to these amazing people who have contributed sources to Horizon.
         </p>
       </div>
 
       <div className="mx-auto max-w-4xl">
-        <div className="flex flex-wrap justify-center gap-6">
-          {contributors.map((contributor, index) => (
-            <a
-              key={index}
-              href={contributor.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col items-center gap-3 transition-transform hover:scale-110"
-            >
-              <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-gray-200 shadow-md transition-all group-hover:border-orange-500 group-hover:shadow-lg">
-                <img
-                  src={contributor.avatar}
-                  alt={contributor.name}
-                  className="h-full w-full object-cover"
-                />
+        {contributors.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            <p>No contributors yet. Be the first to submit a source!</p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-6">
+            {contributors.map((contributor) => (
+              <div
+                key={contributor.id}
+                className="group flex flex-col items-center gap-3 transition-transform hover:scale-110"
+              >
+                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-gray-200 shadow-md transition-all group-hover:border-orange-500 group-hover:shadow-lg">
+                  <img
+                    src={contributor.image || "https://avatars.githubusercontent.com/u/0?v=4"}
+                    alt={contributor.name || "Contributor"}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600">
+                  {contributor.name || "Anonymous"}
+                </span>
               </div>
-              <span className="text-sm font-medium text-gray-700 group-hover:text-orange-600">
-                {contributor.name}
-              </span>
-            </a>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
