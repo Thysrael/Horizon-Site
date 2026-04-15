@@ -36,9 +36,64 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 
+## Authentication Setup
+
+GitHub OAuth via NextAuth v5, with Prisma + Vercel Postgres for user records (sessions use JWT — no DB hit per request).
+
+### 1. Create Vercel Postgres Database
+
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard) → your project → Storage
+2. Click "Create Database" → select "Postgres"
+3. After creation, Vercel auto-injects `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING` into your deployment
+
+For local development, pull the env vars:
+
+```bash
+vercel env pull .env.local
+```
+
+Or manually copy from: Vercel Dashboard → Storage → your database → .env.local tab.
+
+### 2. Run Database Migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 3. Set up GitHub OAuth App
+
+1. Go to GitHub → Settings → Developer Settings → OAuth Apps → New OAuth App
+2. Fill in:
+   - Application name: `Horizon (Local)`
+   - Homepage URL: `http://localhost:3000`
+   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+3. Click "Register application"
+4. Copy Client ID and generate Client Secret
+5. Update `.env.local`:
+   ```
+   AUTH_GITHUB_ID="your-github-oauth-app-id"
+   AUTH_GITHUB_SECRET="your-github-oauth-app-secret"
+   ```
+
+### 4. Generate Auth Secret
+
+```bash
+npx auth secret
+```
+
+This auto-writes `AUTH_SECRET` to `.env.local`.
+
+### 5. Start Development Server
+
+```bash
+yarn dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and click "Login" to test.
+
 ## Functions
 
-- Auth
+- Auth (GitHub OAuth via NextAuth v5)
 - Submit
 - Rank
 - Profile(a collection of)

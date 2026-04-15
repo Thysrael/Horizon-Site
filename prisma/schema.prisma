@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?  @map("email_verified")
+  image         String?
+  isAdmin       Boolean   @default(false)
+
+  accounts      Account[]
+  sources       Source[]
+  votes         Vote[]
+
+  createdAt     DateTime  @default(now())
+
+  @@map("users")
+}
+
+model Source {
+  id          String     @id @default(cuid())
+  name        String
+  url         String     @unique
+  description String?    @db.Text
+  type        SourceType
+  category    String
+  tags        String[]
+  iconUrl     String?
+
+  status      Status     @default(PENDING)
+  voteCount   Int        @default(0)
+
+  submitterId String
+  submitter   User       @relation(fields: [submitterId], references: [id], onDelete: Cascade)
+
+  votes       Vote[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([tags], type: Gin)
+  @@index([status, voteCount])
+  @@index([category])
+  @@map("sources")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  sourceId  String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source    Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, sourceId])
+  @@map("votes")
+}
+
+enum SourceType {
+  RSS
+  HACKER_NEWS
+  REDDIT
+  TELEGRAM
+  GITHUB
+  NEWSLETTER
+  OTHER
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
