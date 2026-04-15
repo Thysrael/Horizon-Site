@@ -59,46 +59,34 @@ function AnimatedSlogan() {
     <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl cursor-default leading-tight">
       <span className="block mb-4 text-gray-900">
         Enjoy the{' '}
-        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-600 via-orange-700 to-orange-300 bg-[length:300%_auto] animate-gradient-flow group">
+        <span className="relative inline-block text-orange-500 group">
           News
           <svg className="absolute -bottom-1 left-0 w-0 group-hover:w-full transition-all duration-250 ease-out h-3 overflow-visible" viewBox="0 0 100 10" preserveAspectRatio="none">
             <path
               d="M0 8 Q 50 2, 100 8"
-              stroke="url(#handdrawn-gradient)"
+              stroke="#f97316"
               strokeWidth="2.5"
               strokeLinecap="round"
               fill="none"
               className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             />
-            <defs>
-              <linearGradient id="handdrawn-gradient" x1="0" y1="0" x2="100" y2="0">
-                <stop stopColor="#f97316" />
-                <stop offset="1" stopColor="#dc2626" />
-              </linearGradient>
-            </defs>
           </svg>
         </span>
         {' '}itself
       </span>
       <span className="text-gray-900">
         Leave others to{' '}
-        <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-red-600 via-orange-700 to-orange-300 bg-[length:300%_auto] animate-gradient-flow group">
+        <span className="relative inline-block text-orange-500 group">
           Horizon
           <svg className="absolute -bottom-1 left-0 w-0 group-hover:w-full transition-all duration-250 ease-out h-3 overflow-visible" viewBox="0 0 120 10" preserveAspectRatio="none">
             <path
               d="M0 8 Q 60 2, 120 8"
-              stroke="url(#handdrawn-gradient2)"
+              stroke="#f97316"
               strokeWidth="2.5"
               strokeLinecap="round"
               fill="none"
               className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             />
-            <defs>
-              <linearGradient id="handdrawn-gradient2" x1="0" y1="0" x2="120" y2="0">
-                <stop stopColor="#f97316" />
-                <stop offset="1" stopColor="#dc2626" />
-              </linearGradient>
-            </defs>
           </svg>
         </span>
       </span>
