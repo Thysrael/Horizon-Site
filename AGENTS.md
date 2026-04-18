@@ -27,6 +27,9 @@ This is a minimal Next.js 16 content curation app designed for Vercel deployment
 
 ## Developer Commands
 
+- **Package Manager:** Use `yarn` (NOT npm). The project uses `yarn.lock`.
+  - Install dependencies: `yarn add <package>`
+  - Install dev dependencies: `yarn add -D <package>`
 - **Prisma Migrations:**
   - Local dev: `npx prisma migrate dev`
   - Prod/Deploy: `npx prisma migrate deploy`

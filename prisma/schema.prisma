@@ -55,6 +55,9 @@ model Source {
   tags        String[]
   iconUrl     String?
 
+  // Type-specific configuration storage (GitHub: owner/repo/username, Reddit: subreddit, etc.)
+  config      Json       @default("{}")
+
   status      Status     @default(PENDING)
   voteCount   Int        @default(0)
 

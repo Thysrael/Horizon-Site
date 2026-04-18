@@ -1,19 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, SourceType } from "../types";
 import { CATEGORIES } from "../lib/constants";
 import { TagInput } from "../components/TagInput";
+import {
+  TYPE_FIELD_CONFIG,
+  getVisibleFields,
+  sourceSubmissionSchema,
+  sourceConfigSchemas,
+} from "../lib/sourceConfig";
+import { buildSourceUrl } from "../lib/urlBuilder";
+import { DynamicField } from "../components/DynamicField";
 
-// Only these types can be submitted by users
-// HACKER_NEWS: System has built-in support, no need to submit
-// NEWSLETTER/OTHER: Cannot be automatically fetched/processed
-const SUBMITTABLE_SOURCE_TYPES: { value: SourceType; label: string; description: string }[] = [
-  { value: "RSS", label: "RSS Feed", description: "Standard RSS/Atom feed URL" },
-  { value: "REDDIT", label: "Reddit", description: "Reddit subreddit or user feed" },
-  { value: "TELEGRAM", label: "Telegram", description: "Telegram channel URL" },
-  { value: "GITHUB", label: "GitHub", description: "GitHub repository or user releases" },
+const SUBMITTABLE_SOURCE_TYPES: {
+  value: SourceType;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "RSS",
+    label: "RSS Feed",
+    description: "Standard RSS/Atom feed URL",
+  },
+  {
+    value: "REDDIT",
+    label: "Reddit",
+    description: "Reddit subreddit feed",
+  },
+  {
+    value: "TELEGRAM",
+    label: "Telegram",
+    description: "Telegram channel",
+  },
+  {
+    value: "GITHUB",
+    label: "GitHub",
+    description: "GitHub user activity or repository releases",
+  },
 ];
 
 interface SubmitFormProps {
@@ -25,36 +52,107 @@ export function SubmitForm({ userId }: SubmitFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
-  const [formData, setFormData] = useState({
-    name: "",
-    url: "",
-    description: "",
-    type: "" as SourceType | "",
-    category: "" as Category | "",
-    tags: [] as string[],
-    iconUrl: "",
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    resolver: zodResolver(sourceSubmissionSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      type: undefined as unknown as "RSS" | "REDDIT" | "TELEGRAM" | "GITHUB",
+      category: undefined as unknown as Category,
+      tags: [],
+      iconUrl: "",
+      config: {},
+    },
   });
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(null);
-  }
+  const selectedType = watch("type");
+  const configValues = watch("config");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const visibleFields = useMemo(() => {
+    if (!selectedType) return [];
+    return getVisibleFields(
+      selectedType as keyof typeof TYPE_FIELD_CONFIG,
+      configValues || {}
+    );
+  }, [selectedType, configValues]);
+
+  useEffect(() => {
+    if (selectedType && configValues) {
+      try {
+        const validationSchema =
+          sourceConfigSchemas[selectedType as keyof typeof sourceConfigSchemas];
+        if (validationSchema) {
+          const validated = validationSchema.safeParse(configValues);
+          if (validated.success) {
+            const url = buildSourceUrl(
+              selectedType,
+              validated.data
+            );
+            setPreviewUrl(url);
+          } else {
+            setPreviewUrl("");
+          }
+        }
+      } catch {
+        setPreviewUrl("");
+      }
+    } else {
+      setPreviewUrl("");
+    }
+  }, [selectedType, configValues]);
+
+  useEffect(() => {
+    if (selectedType) {
+      setValue("config", {});
+      setPreviewUrl("");
+    }
+  }, [selectedType, setValue]);
+
+  useEffect(() => {
+    if (selectedType === "GITHUB" && configValues) {
+      const subtype = configValues.subtype;
+      if (subtype === "user_events" && (configValues.owner || configValues.repo)) {
+        setValue("config", { subtype: "user_events" }, { shouldValidate: false });
+      } else if (subtype === "repo_releases" && configValues.username) {
+        setValue("config", { subtype: "repo_releases" }, { shouldValidate: false });
+      }
+    }
+  }, [selectedType, configValues?.subtype, setValue]);
+
+  const onSubmit = async (formData: any) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
+      const validationSchema =
+        sourceConfigSchemas[formData.type as keyof typeof sourceConfigSchemas];
+      const configValidation = validationSchema.safeParse(formData.config);
+
+      if (!configValidation.success) {
+        throw new Error("Invalid configuration for selected type");
+      }
+
+      const constructedUrl = buildSourceUrl(
+        formData.type,
+        configValidation.data
+      );
+
       const response = await fetch("/api/sources", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          url: constructedUrl,
           submitterId: userId,
         }),
       });
@@ -66,15 +164,7 @@ export function SubmitForm({ userId }: SubmitFormProps) {
       }
 
       setSuccess(true);
-      setFormData({
-        name: "",
-        url: "",
-        description: "",
-        type: "",
-        category: "",
-        tags: [],
-        iconUrl: "",
-      });
+      reset();
 
       setTimeout(() => {
         router.push("/");
@@ -85,7 +175,7 @@ export function SubmitForm({ userId }: SubmitFormProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -116,7 +206,7 @@ export function SubmitForm({ userId }: SubmitFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
@@ -125,49 +215,34 @@ export function SubmitForm({ userId }: SubmitFormProps) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
             Source Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
+            {...register("name")}
             placeholder="e.g., Hacker News"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
           />
+          {errors.name && (
+            <p className="text-sm text-red-600">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700">
-            URL <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="url"
-            id="url"
-            name="url"
-            value={formData.url}
-            onChange={handleChange}
-            required
-            placeholder="https://..."
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-2">
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="type"
+            className="block text-sm font-medium text-gray-700"
+          >
             Source Type <span className="text-red-500">*</span>
           </label>
           <select
             id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            required
+            {...register("type")}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="">Select a type...</option>
@@ -177,18 +252,66 @@ export function SubmitForm({ userId }: SubmitFormProps) {
               </option>
             ))}
           </select>
+          {errors.type && (
+            <p className="text-sm text-red-600">{errors.type.message}</p>
+          )}
         </div>
+      </div>
 
+      {selectedType && (
+        <div className="rounded-xl border border-orange-100 bg-orange-50/50 p-6 space-y-4">
+          <h3 className="text-sm font-semibold text-gray-900">
+            {SUBMITTABLE_SOURCE_TYPES.find((t) => t.value === selectedType)
+              ?.label}{" "}
+            Configuration
+          </h3>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {TYPE_FIELD_CONFIG[selectedType as keyof typeof TYPE_FIELD_CONFIG]
+              ?.filter((field) => visibleFields.includes(field.name))
+              .map((field) => (
+                <DynamicField
+                  key={field.name}
+                  field={field}
+                  control={control as any}
+                  error={errors.config?.[field.name] as any}
+                  onChange={
+                    field.name === "subtype" && selectedType === "GITHUB"
+                      ? (value) => {
+                          if (value === "user_events") {
+                            setValue("config", { subtype: "user_events" }, { shouldValidate: false });
+                          } else if (value === "repo_releases") {
+                            setValue("config", { subtype: "repo_releases" }, { shouldValidate: false });
+                          }
+                        }
+                      : undefined
+                  }
+                />
+              ))}
+          </div>
+
+          {previewUrl && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Generated URL:</p>
+              <p className="text-sm font-mono text-orange-600 break-all">
+                {previewUrl}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700"
+          >
             Category <span className="text-red-500">*</span>
           </label>
           <select
             id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
+            {...register("category")}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="">Select a category...</option>
@@ -198,29 +321,39 @@ export function SubmitForm({ userId }: SubmitFormProps) {
               </option>
             ))}
           </select>
+          {errors.category && (
+            <p className="text-sm text-red-600">{errors.category.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Tags
+          </label>
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <TagInput
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Add relevant tags..."
+              />
+            )}
+          />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Tags
-        </label>
-        <TagInput
-          value={formData.tags}
-          onChange={(tags) => setFormData((prev) => ({ ...prev, tags }))}
-          placeholder="Add relevant tags..."
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700"
+        >
           Description
         </label>
         <textarea
           id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
+          {...register("description")}
           rows={3}
           placeholder="Briefly describe what this source covers..."
           className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all resize-none"
@@ -228,15 +361,16 @@ export function SubmitForm({ userId }: SubmitFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="iconUrl" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="iconUrl"
+          className="block text-sm font-medium text-gray-700"
+        >
           Icon URL (optional)
         </label>
         <input
           type="url"
           id="iconUrl"
-          name="iconUrl"
-          value={formData.iconUrl}
-          onChange={handleChange}
+          {...register("iconUrl")}
           placeholder="https://example.com/favicon.ico"
           className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all"
         />
