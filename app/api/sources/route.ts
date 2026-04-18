@@ -1,8 +1,11 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { Category } from "@prisma/client"
 import { NextResponse } from "next/server"
 
-const VALID_SOURCE_TYPES = ["RSS", "HACKER_NEWS", "REDDIT", "TELEGRAM", "GITHUB", "NEWSLETTER", "OTHER"]
+// Types that users can submit (excludes system-managed types)
+const SUBMITTABLE_SOURCE_TYPES = ["RSS", "REDDIT", "TELEGRAM", "GITHUB"]
+const VALID_CATEGORIES = Object.values(Category)
 
 export async function POST(request: Request) {
   try {
@@ -31,22 +34,22 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!type || !VALID_SOURCE_TYPES.includes(type)) {
+    if (!type || !SUBMITTABLE_SOURCE_TYPES.includes(type)) {
       return NextResponse.json(
-        { error: `Type must be one of: ${VALID_SOURCE_TYPES.join(", ")}` },
+        { error: `Type must be one of: ${SUBMITTABLE_SOURCE_TYPES.join(", ")}` },
         { status: 400 }
       )
     }
 
-    if (!category || typeof category !== "string" || category.trim() === "") {
+    if (!category || !VALID_CATEGORIES.includes(category)) {
       return NextResponse.json(
-        { error: "Category is required" },
+        { error: `Category must be one of: ${VALID_CATEGORIES.join(", ")}` },
         { status: 400 }
       )
     }
 
     const validatedTags = Array.isArray(tags)
-      ? tags.filter((tag): tag is string => typeof tag === "string")
+      ? tags.filter((tag): tag is string => typeof tag === "string" && tag.trim() !== "")
       : []
 
     const source = await prisma.source.create({
@@ -55,7 +58,7 @@ export async function POST(request: Request) {
         name: name.trim(),
         description: description?.trim() || null,
         type,
-        category: category.trim(),
+        category,
         tags: validatedTags,
         iconUrl: iconUrl?.trim() || null,
         submitterId: session.user.id,
@@ -63,7 +66,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json(
-      { message: "Source submitted successfully", source },
+      { message: "Source submitted successfully and is pending review", source },
       { status: 201 }
     )
   } catch (error) {

@@ -51,7 +51,7 @@ model Source {
   url         String     @unique
   description String?    @db.Text
   type        SourceType
-  category    String
+  category    Category
   tags        String[]
   iconUrl     String?
 
@@ -100,4 +100,18 @@ enum Status {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum Category {
+  GENERAL
+  AI_ML
+  SYSTEMS
+  SECURITY
+  PL
+  WEBDEV
+  EMBEDDED
+  DEV_ECOSYSTEM
+  EMERGING_TECH
+  INDUSTRY
+  SCIENCE
 }

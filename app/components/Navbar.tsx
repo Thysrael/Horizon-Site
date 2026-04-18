@@ -38,10 +38,13 @@ export function Navbar({ searchQuery }: NavbarProps) {
 
         <div className="flex items-center gap-2">
           <AuthButton />
-          <button className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-3 py-2 sm:px-4 text-sm font-medium text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-105 transition-all">
+          <Link
+            href="/submit"
+            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-3 py-2 sm:px-4 text-sm font-medium text-white shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-105 transition-all"
+          >
             <span className="text-lg leading-none">+</span>
             <span className="hidden sm:inline">Submit</span>
-          </button>
+          </Link>
           <MobileMenu />
         </div>
       </div>
