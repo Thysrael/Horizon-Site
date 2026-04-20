@@ -1,15 +1,34 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { Source, Status } from "@/app/types";
+import { normalizeTag } from "./tags";
 
 export const getSources = cache(async function getSources(searchQuery?: string) {
+  const normalizedQuery = searchQuery ? normalizeTag(searchQuery) : undefined;
+
   return await prisma.source.findMany({
     where: {
       status: "APPROVED",
-      ...(searchQuery && {
-        tags: {
-          hasSome: [searchQuery],
-        },
+      ...(normalizedQuery && {
+        OR: [
+          {
+            tags: {
+              hasSome: [normalizedQuery],
+            },
+          },
+          {
+            name: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: normalizedQuery,
+              mode: "insensitive",
+            },
+          },
+        ],
       }),
     },
     orderBy: {

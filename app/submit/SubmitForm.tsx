@@ -166,6 +166,10 @@ export function SubmitForm({ userId }: SubmitFormProps) {
       setSuccess(true);
       reset();
 
+      if (data.droppedTags && data.droppedTags.length > 0) {
+        console.warn("Dropped tags:", data.droppedTags);
+      }
+
       setTimeout(() => {
         router.push("/");
         router.refresh();
@@ -338,6 +342,7 @@ export function SubmitForm({ userId }: SubmitFormProps) {
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Add relevant tags..."
+                hideZeroCount={true}
               />
             )}
           />

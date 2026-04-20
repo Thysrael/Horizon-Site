@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/app/lib/admin";
 import { Status, SourceType, Category } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
 
 // GET /api/admin/sources - List all sources with optional filters
 export async function GET(request: NextRequest) {
@@ -77,8 +78,14 @@ export async function PATCH(request: NextRequest) {
     if (description !== undefined) updateData.description = description;
     if (type !== undefined) updateData.type = type;
     if (category !== undefined) updateData.category = category;
-    if (tags !== undefined) updateData.tags = tags;
-    if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
+    let droppedTags: string[] = [];
+    if (tags !== undefined) {
+      const normalizedTags = tags.map((tag: string) => normalizeTag(tag));
+      droppedTags = normalizedTags.filter((tag: string) => isBlockedTag(tag));
+      updateData.tags = normalizedTags.filter(
+        (tag: string) => tag.length > 0 && !isBlockedTag(tag)
+      );
+    }
 
     const source = await prisma.source.update({
       where: { id },
@@ -96,6 +103,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       message: "Source updated successfully",
       source,
+      droppedTags: droppedTags.length > 0 ? droppedTags : undefined,
     });
   } catch (error: any) {
     console.error("Error updating source:", error);

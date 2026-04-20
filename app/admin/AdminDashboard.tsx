@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react";
 import type { Source } from "@/app/types";
 import { Status, SourceType, Category } from "@prisma/client";
+import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
+import { TagInput } from "@/app/components/TagInput";
 
 interface AdminDashboardProps {
   initialPendingSources: Source[];
@@ -42,8 +44,10 @@ export default function AdminDashboard({
   const [filterCategory, setFilterCategory] = useState<Category | "">("");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingSource, setEditingSource] = useState<Source | null>(null);
+  const [editTags, setEditTags] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [tagWarning, setTagWarning] = useState<string | null>(null);
 
   const showError = useCallback((message: string) => {
     setError(message);
@@ -159,6 +163,8 @@ export default function AdminDashboard({
 
   const handleEdit = useCallback((source: Source) => {
     setEditingSource(source);
+    setEditTags(source.tags);
+    setTagWarning(null);
     setError(null);
   }, []);
 
@@ -183,10 +189,9 @@ export default function AdminDashboard({
     const type = formData.get("type") as SourceType;
     const category = formData.get("category") as Category;
     const status = formData.get("status") as Status;
-    const tags = (formData.get("tags") as string)
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+
+    const blockedTags = editTags.filter((t) => isBlockedTag(t));
+    const tags = editTags.filter((t) => !isBlockedTag(t));
 
     if (!name) {
       showError("Name is required");
@@ -201,6 +206,12 @@ export default function AdminDashboard({
     if (iconUrl && !validateUrl(iconUrl)) {
       showError("Please enter a valid icon URL or leave it empty");
       return;
+    }
+
+    if (blockedTags.length > 0) {
+      setTagWarning(`Note: Generic tags were removed: ${blockedTags.join(", ")}. Use more specific tags.`);
+    } else {
+      setTagWarning(null);
     }
 
     const updates = {
@@ -223,7 +234,7 @@ export default function AdminDashboard({
       });
 
       if (response.ok) {
-        const { source: updatedSource } = await response.json();
+        const { source: updatedSource, droppedTags } = await response.json();
         const oldStatus = editingSource.status;
         const newStatus = updatedSource.status;
 
@@ -246,7 +257,10 @@ export default function AdminDashboard({
         }
 
         setEditingSource(null);
-        showSuccess(`"${updatedSource.name}" updated`);
+        const successMsg = droppedTags && droppedTags.length > 0
+          ? `"${updatedSource.name}" updated (removed generic tags: ${droppedTags.join(", ")})`
+          : `"${updatedSource.name}" updated`;
+        showSuccess(successMsg);
       } else {
         const data = await response.json();
         showError(data.error || "Failed to update source");
@@ -623,19 +637,23 @@ export default function AdminDashboard({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags (comma-separated)
+                  Tags
                 </label>
-                <input
-                  type="text"
-                  name="tags"
-                  defaultValue={editingSource.tags.join(", ")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                <TagInput
+                  value={editTags}
+                  onChange={setEditTags}
+                  placeholder="Add relevant tags..."
                 />
+                {tagWarning && (
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                    {tagWarning}
+                  </div>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Icon URL (optional)
-                </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Icon URL (optional)
+                  </label>
                 <input
                   type="url"
                   name="iconUrl"
@@ -646,7 +664,11 @@ export default function AdminDashboard({
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => setEditingSource(null)}
+                  onClick={() => {
+                    setEditingSource(null);
+                    setEditTags([]);
+                    setTagWarning(null);
+                  }}
                   className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
                 >
                   Cancel

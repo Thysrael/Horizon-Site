@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sourceConfigSchemas } from "@/app/lib/sourceConfig";
 import { buildSourceUrl } from "@/app/lib/urlBuilder";
+import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
 
 const SUBMITTABLE_SOURCE_TYPES = ["RSS", "REDDIT", "TELEGRAM", "GITHUB"];
 const VALID_CATEGORIES = Object.values(Category);
@@ -81,8 +82,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const validatedTags = tags.filter(
-      (tag): tag is string => typeof tag === "string" && tag.trim() !== ""
+    const normalizedTags = tags.map((tag) => normalizeTag(tag));
+    const droppedTags = normalizedTags.filter((tag) => isBlockedTag(tag));
+    const validatedTags = normalizedTags.filter(
+      (tag): tag is string => tag.length > 0 && !isBlockedTag(tag)
     );
 
     const source = await prisma.source.create({
@@ -106,6 +109,7 @@ export async function POST(request: Request) {
           ...source,
           config: configValidation.data,
         },
+        droppedTags: droppedTags.length > 0 ? droppedTags : undefined,
       },
       { status: 201 }
     );

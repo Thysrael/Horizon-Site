@@ -1,5 +1,4 @@
-export const POPULAR_TAGS: string[] = [
-  // General
+export const BLOCKED_TAGS: string[] = [
   "news",
   "trends",
   "community",
@@ -11,8 +10,6 @@ export const POPULAR_TAGS: string[] = [
   "guide",
   "release",
   "announcement",
-  
-  // Technical depth
   "research",
   "paper",
   "benchmark",
@@ -21,8 +18,6 @@ export const POPULAR_TAGS: string[] = [
   "case-study",
   "interview",
   "retrospective",
-  
-  // Source type
   "open-source",
   "github",
   "blog",
@@ -30,136 +25,31 @@ export const POPULAR_TAGS: string[] = [
   "podcast",
   "video",
   "conference",
-  
-  // Domain specific (general)
-  "ai",
-  "ml",
-  "llm",
-  "deep-learning",
-  "neural-networks",
-  "nlp",
-  "computer-vision",
-  "transformer",
-  "training",
-  "inference",
-  
-  "linux",
-  "kernel",
-  "distributed-systems",
-  "database",
-  "storage",
-  "cloud",
-  "kubernetes",
-  "docker",
-  "networking",
-  "observability",
-  "microservices",
-  
-  "security",
-  "vulnerability",
-  "cve",
-  "exploit",
-  "cryptography",
-  "privacy",
-  "pentesting",
-  "reverse-engineering",
-  "malware",
-  "authentication",
-  "zero-trust",
-  
-  "rust",
-  "typescript",
-  "javascript",
-  "go",
-  "python",
-  "haskell",
-  "ocaml",
-  "zig",
-  "compiler",
-  "type-system",
-  "functional-programming",
-  "memory-safety",
-  "wasm",
-  "jit",
-  
-  "frontend",
-  "backend",
-  "react",
-  "nextjs",
-  "vue",
-  "svelte",
-  "api",
-  "graphql",
-  "css",
-  "browser",
-  "accessibility",
-  "webassembly",
-  
-  "embedded",
-  "iot",
-  "arduino",
-  "raspberry-pi",
-  "microcontroller",
-  "robotics",
-  "risc-v",
-  "fpga",
-  "firmware",
-  "real-time",
-  "hardware",
-  
-  "git",
-  "ci-cd",
-  "testing",
-  "vscode",
-  "neovim",
-  "cli",
-  "terminal",
-  "devops",
-  "license",
-  "community",
-  
-  "biotech",
-  "space",
-  "spacex",
-  "nasa",
-  "quantum-computing",
-  "clean-energy",
-  "climate-tech",
-  "blockchain",
-  "web3",
-  "ar-vr",
-  "metaverse",
-  
-  "startup",
-  "funding",
-  "vc",
-  "big-tech",
-  "google",
-  "apple",
-  "microsoft",
-  "amazon",
-  "meta",
-  "regulation",
-  "antitrust",
-  "hiring",
-  "remote-work",
-  "market-analysis",
-  
-  "mathematics",
-  "physics",
-  "chemistry",
-  "biology",
-  "neuroscience",
-  "algorithm",
-  "complexity",
-  "graph-theory",
-  "topology",
+  "general",
+  "other",
+  "misc",
+  "various",
+  "interesting",
+  "good",
+  "article",
+  "post",
+  "update",
+  "weekly",
+  "daily",
+  "monthly",
 ];
 
-export function getAllTags(): string[] {
-  return POPULAR_TAGS;
+export function normalizeTag(tag: string): string {
+  return tag
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\-\s]/gu, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 30);
 }
 
-export function getSuggestedTags(): string[] {
-  return POPULAR_TAGS;
+export function isBlockedTag(tag: string): boolean {
+  return BLOCKED_TAGS.includes(normalizeTag(tag));
 }

@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Source, Contributor } from "../types";
+import { TagCloud } from "./TagCloud";
 
 // Re-export types for local usage
 export type { Source, Contributor };
@@ -305,7 +306,7 @@ interface TabViewProps {
 }
 
 export function TabView({ sources, contributors }: TabViewProps) {
-  const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors'>('community');
+  const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors' | 'tags'>('community');
 
   return (
     <div>
@@ -332,6 +333,16 @@ export function TabView({ sources, contributors }: TabViewProps) {
             Sources
           </button>
           <button
+            onClick={() => setActiveTab('tags')}
+            className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
+              activeTab === 'tags'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Tags
+          </button>
+          <button
             onClick={() => setActiveTab('contributors')}
             className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
               activeTab === 'contributors'
@@ -348,6 +359,8 @@ export function TabView({ sources, contributors }: TabViewProps) {
         <DemoTab />
       ) : activeTab === 'community' ? (
         <SourcesTab sources={sources} />
+      ) : activeTab === 'tags' ? (
+        <TagsTab />
       ) : (
         <ContributorsTab contributors={contributors} />
       )}
@@ -465,21 +478,11 @@ function SourcesTab({ sources }: SourcesTabProps) {
                 className="group flex items-center gap-4 py-4 transition-colors hover:bg-gray-50/50"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-50 overflow-hidden">
-                  {source.iconUrl ? (
-                    <img
-                      src={source.iconUrl}
-                      alt={source.name}
-                      className="h-8 w-8 object-contain"
-                    />
-                  ) : (
-                    <Image
-                      src={getSourceIcon(source.type)}
-                      alt={source.type}
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 object-contain"
-                    />
-                  )}
+                  <img
+                    src={source.iconUrl || getSourceIcon(source.type)}
+                    alt={source.name}
+                    className="h-8 w-8 object-contain"
+                  />
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -506,10 +509,14 @@ function SourcesTab({ sources }: SourcesTabProps) {
                       <span className="text-gray-300">|</span>
                     )}
                     <div className="flex gap-1">
-                      {source.tags.slice(0, 3).map((tag, idx) => (
-                        <span key={idx} className="text-orange-500/70">
+                      {source.tags.slice(0, 3).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/?q=${encodeURIComponent(tag)}`}
+                          className="text-orange-500/70 hover:text-orange-600 hover:underline transition-colors"
+                        >
                           #{tag}
-                        </span>
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -536,6 +543,20 @@ function SourcesTab({ sources }: SourcesTabProps) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function TagsTab() {
+  return (
+    <div>
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Popular Tags</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+          Discover sources by topic. Click any tag to explore.
+        </p>
+      </div>
+      <TagCloud />
     </div>
   );
 }
