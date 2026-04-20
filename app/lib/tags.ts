@@ -1,10 +1,8 @@
 export const BLOCKED_TAGS: string[] = [
-  "news",
   "trends",
   "community",
   "discussion",
   "analysis",
-  "opinion",
   "culture",
   "tutorial",
   "guide",

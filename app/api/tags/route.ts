@@ -18,20 +18,35 @@ export async function GET(request: Request) {
       },
     });
 
-    const tagCountMap = new Map<string, number>();
+    // Map to store: normalizedTag -> { originalTag, count }
+    // We keep the most common original form for display
+    const tagMap = new Map<string, { original: string; count: number }>();
 
     for (const source of sources) {
-      for (const tag of source.tags) {
-        const normalized = normalizeTag(tag);
+      for (const originalTag of source.tags) {
+        const normalized = normalizeTag(originalTag);
         if (!normalized) continue;
         if (!includeBlocked && isBlockedTag(normalized)) continue;
 
-        tagCountMap.set(normalized, (tagCountMap.get(normalized) || 0) + 1);
+        const existing = tagMap.get(normalized);
+        if (existing) {
+          existing.count += 1;
+          // Keep the shorter original tag for display (usually cleaner)
+          if (originalTag.length < existing.original.length) {
+            existing.original = originalTag;
+          }
+        } else {
+          tagMap.set(normalized, { original: originalTag, count: 1 });
+        }
       }
     }
 
-    let tagCounts = Array.from(tagCountMap.entries())
-      .map(([name, count]) => ({ name, count }))
+    let tagCounts = Array.from(tagMap.entries())
+      .map(([normalized, data]) => ({ 
+        name: data.original,  // Use original tag name for display
+        normalized,          // Keep normalized for internal use
+        count: data.count 
+      }))
       .filter((tag) => tag.count >= minCount)
       .sort((a, b) => b.count - a.count);
 
@@ -67,23 +82,36 @@ export async function POST(request: Request) {
       },
     });
 
-    const tagCountMap = new Map<string, number>();
-    for (const source of sources) {
-      for (const tag of source.tags) {
-        const normalized = normalizeTag(tag);
-        if (!normalized || isBlockedTag(normalized)) continue;
-        if (exclude.includes(normalized)) continue;
+    // Map to store: normalizedTag -> { originalTag, count }
+    const tagMap = new Map<string, { original: string; count: number }>();
 
-        tagCountMap.set(normalized, (tagCountMap.get(normalized) || 0) + 1);
+    for (const source of sources) {
+      for (const originalTag of source.tags) {
+        const normalized = normalizeTag(originalTag);
+        if (!normalized || isBlockedTag(normalized)) continue;
+
+        const existing = tagMap.get(normalized);
+        if (existing) {
+          existing.count += 1;
+          if (originalTag.length < existing.original.length) {
+            existing.original = originalTag;
+          }
+        } else {
+          tagMap.set(normalized, { original: originalTag, count: 1 });
+        }
       }
     }
 
-    let suggestions = Array.from(tagCountMap.entries())
-      .map(([name, count]) => ({ name, count }))
+    let suggestions = Array.from(tagMap.entries())
+      .map(([normalized, data]) => ({ 
+        name: data.original,
+        normalized,
+        count: data.count 
+      }))
       .filter((tag) => {
-        if (exclude.includes(tag.name)) return false;
+        if (exclude.includes(tag.normalized)) return false;
         if (normalizedQuery) {
-          return tag.name.includes(normalizedQuery);
+          return tag.normalized.includes(normalizedQuery);
         }
         return true;
       })

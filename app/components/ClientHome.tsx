@@ -224,9 +224,9 @@ export function MobileMenu() {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      router.push(`/?q=${encodeURIComponent(searchValue.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
     } else {
-      router.push("/");
+      router.push("/search");
     }
     setIsOpen(false);
   };
@@ -512,7 +512,7 @@ function SourcesTab({ sources }: SourcesTabProps) {
                       {source.tags.slice(0, 3).map((tag) => (
                         <Link
                           key={tag}
-                          href={`/?q=${encodeURIComponent(tag)}`}
+                          href={`/search?tags=${encodeURIComponent(tag)}`}
                           className="text-orange-500/70 hover:text-orange-600 hover:underline transition-colors"
                         >
                           #{tag}
@@ -643,9 +643,9 @@ export function SearchInput({ initialQuery = "" }: SearchInputProps) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      router.push(`/?q=${encodeURIComponent(searchValue.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
     } else {
-      router.push("/");
+      router.push("/search");
     }
   };
 

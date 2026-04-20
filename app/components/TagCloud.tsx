@@ -82,7 +82,7 @@ export function TagCloud() {
           return (
             <Link
               key={tag.name}
-              href={`/?q=${encodeURIComponent(tag.name)}`}
+              href={`/search?tags=${encodeURIComponent(tag.name)}`}
               className="text-gray-600 hover:text-orange-600 transition-colors"
               style={{
                 fontSize: style.fontSize,
