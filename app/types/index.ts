@@ -13,6 +13,7 @@ export interface Source {
   iconUrl: string | null;
   voteCount: number;
   status: Status;
+  config?: unknown;
   submitter: {
     name: string | null;
   };

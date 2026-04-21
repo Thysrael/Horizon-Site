@@ -350,12 +350,17 @@ export function SubmitForm({ userId }: SubmitFormProps) {
       </div>
 
       <div className="space-y-2">
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Description
-        </label>
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Description
+          </label>
+          <span className={`text-xs ${(watch("description")?.length || 0) > 200 ? 'text-red-500' : 'text-gray-400'}`}>
+            {watch("description")?.length || 0}/200
+          </span>
+        </div>
         <textarea
           id="description"
           {...register("description")}
@@ -363,6 +368,9 @@ export function SubmitForm({ userId }: SubmitFormProps) {
           placeholder="Briefly describe what this source covers..."
           className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none transition-all resize-none"
         />
+        {errors.description && (
+          <p className="text-sm text-red-600">{errors.description.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">

@@ -178,3 +178,18 @@ export const getCategoryCounts = cache(async function getCategoryCounts(): Promi
     }))
     .sort((a, b) => b.count - a.count);
 });
+
+export const getUserVotedSourceIds = cache(async function getUserVotedSourceIds(
+  userId: string
+): Promise<Set<string>> {
+  const votes = await prisma.vote.findMany({
+    where: {
+      userId,
+    },
+    select: {
+      sourceId: true,
+    },
+  });
+
+  return new Set(votes.map((vote) => vote.sourceId));
+});

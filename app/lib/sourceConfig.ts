@@ -76,11 +76,16 @@ export const sourceConfigSchemas: {
   RSS: rssConfigSchema,
 };
 
+const categoryValues = Object.values(Category);
+
 export const sourceSubmissionSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  description: z.string().max(500).optional(),
+  description: z.string().max(200, "Description must be 200 characters or less").optional(),
   type: z.enum(["GITHUB", "REDDIT", "TELEGRAM", "RSS"]),
-  category: z.nativeEnum(Category),
+  category: z.string().refine(
+    (val) => categoryValues.includes(val as Category),
+    { message: "Please select a valid category" }
+  ).transform((val) => val as Category),
   tags: z.array(z.string()).max(10),
   iconUrl: z.string().url().optional().or(z.literal("")),
   config: z.record(z.string(), z.any()).default({}),

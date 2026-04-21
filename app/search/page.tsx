@@ -7,6 +7,8 @@ import { CATEGORIES } from "@/app/lib/constants";
 import { TagInput } from "@/app/components/TagInput";
 import { SourceCard } from "@/app/components/SourceCard";
 import { Navbar } from "@/app/components/Navbar";
+import { transformToHorizonConfig } from "@/app/lib/horizonConfig";
+import type { SourceConfig } from "@/app/lib/sourceConfig";
 
 const LOCAL_STORAGE_KEY = "horizon-search-view-preference";
 
@@ -41,6 +43,10 @@ function SearchContent() {
   const [sources, setSources] = useState<Source[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [exportedConfig, setExportedConfig] = useState<string | null>(null);
 
   const categoryParam = searchParams.get("category") as Category | null;
   const tagsParam = searchParams.get("tags");
@@ -111,7 +117,7 @@ function SearchContent() {
   };
 
   const activeFiltersCount =
-    (currentCategory ? 1 : 0) + currentTags.length + (searchQuery ? 1 : 0);
+    (currentCategory ? 1 : 0) + currentTags.length;
 
   const updateUrl = useCallback(
     (category: Category | null, tags: string[], queryValue: string) => {
@@ -154,8 +160,7 @@ function SearchContent() {
   const clearAllFilters = () => {
     setCurrentCategory(null);
     setCurrentTags([]);
-    setSearchQuery("");
-    router.push(pathname, { scroll: false });
+    router.push(pathname + (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""), { scroll: false });
   };
 
   const clearSearch = () => {
@@ -163,8 +168,66 @@ function SearchContent() {
     updateUrl(currentCategory, currentTags, "");
   };
 
-  const hasActiveFilters =
-    searchQuery || selectedCategory || selectedTags.length > 0;
+  const hasActiveFilters = selectedCategory || selectedTags.length > 0;
+  const hasSearchQuery = !!searchQuery;
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(sources.map((s) => s.id)));
+  };
+
+  const deselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleExport = () => {
+    if (selectedIds.size === 0) return;
+
+    const selectedSources = sources.filter((s) => selectedIds.has(s.id));
+    const configs = selectedSources
+      .map((source) =>
+        transformToHorizonConfig(
+          source.type,
+          (source.config || {}) as SourceConfig,
+          source.name
+        )
+      )
+      .filter(Boolean) as import("@/app/lib/horizonConfig").HorizonConfig[];
+
+    if (configs.length === 0) {
+      alert("No valid configurations to export");
+      return;
+    }
+
+    const { formatAllConfigsJSON } = require("@/app/lib/horizonConfig");
+    const jsonContent = formatAllConfigsJSON(configs);
+    setExportedConfig(jsonContent);
+  };
+
+  const handleCopyExport = () => {
+    if (exportedConfig) {
+      navigator.clipboard.writeText(exportedConfig);
+    }
+  };
+
+  const exitMultiSelectMode = () => {
+    setIsMultiSelectMode(false);
+    setSelectedIds(new Set());
+    setExportedConfig(null);
+  };
+
+  const allSelected = selectedIds.size === sources.length && sources.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -243,28 +306,79 @@ function SearchContent() {
                   onClick={clearAllFilters}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all"
                 >
-                  Clear All Filters
+                  Clear Filters
                 </button>
               )}
             </div>
           </aside>
 
-          <main className="min-w-0 flex-1 space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1 max-w-md">
-                <div className="relative">
+          <main className="min-w-0 flex-1 space-y-4">
+            <div className="flex flex-col gap-3">
+              {isMultiSelectMode && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={allSelected ? deselectAll : selectAll}
+                      className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors"
+                    >
+                      {allSelected ? "Deselect All" : "Select All"}
+                    </button>
+                    {selectedIds.size > 0 && (
+                      <span className="text-sm text-gray-400">
+                        {selectedIds.size} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!exportedConfig ? (
+                      <button
+                        onClick={handleExport}
+                        disabled={selectedIds.size === 0}
+                        className="flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Generate
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setExportedConfig(null)}
+                        className="flex items-center gap-2 rounded-lg bg-gray-500 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Close
+                      </button>
+                    )}
+                    <button
+                      onClick={exitMultiSelectMode}
+                      className="flex items-center justify-center h-8 w-8 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      aria-label="Cancel"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 max-w-sm">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search sources..."
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 pr-10 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-9 text-sm text-gray-700 placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={clearSearch}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
                       aria-label="Clear search"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,19 +387,29 @@ function SearchContent() {
                     </button>
                   )}
                 </div>
-              </div>
+                
+                {!isMultiSelectMode && (
+                  <button
+                    onClick={() => setIsMultiSelectMode(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Export
+                  </button>
+                )}
 
-              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setIsSidebarOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                   </svg>
-                  Filters
+                  Filter
                   {activeFiltersCount > 0 && (
-                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1.5 text-xs font-medium text-white">
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -294,7 +418,7 @@ function SearchContent() {
                 <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm" role="group">
                   <button
                     onClick={() => handleViewChange("grid")}
-                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                    className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
                       view === "grid"
                         ? "bg-orange-50 text-orange-600 shadow-sm"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -305,11 +429,10 @@ function SearchContent() {
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                     </svg>
-                    <span className="hidden sm:inline">Grid</span>
                   </button>
                   <button
                     onClick={() => handleViewChange("list")}
-                    className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                    className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
                       view === "list"
                         ? "bg-orange-50 text-orange-600 shadow-sm"
                         : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -320,7 +443,6 @@ function SearchContent() {
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
-                    <span className="hidden sm:inline">List</span>
                   </button>
                 </div>
               </div>
@@ -330,6 +452,25 @@ function SearchContent() {
               Showing <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
               result{totalCount !== 1 ? "s" : ""}
             </div>
+
+            {exportedConfig && (
+              <div className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium text-gray-700">Exported Configuration</h4>
+                  <button
+                    onClick={handleCopyExport}
+                    className="text-xs px-3 py-1 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
+                  <pre className="text-sm text-gray-300 font-mono">
+                    <code>{exportedConfig}</code>
+                  </pre>
+                </div>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
@@ -343,10 +484,10 @@ function SearchContent() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  No sources found matching your filters
+                  No sources found
                 </h3>
                 <p className="mt-2 max-w-md text-sm text-gray-600">
-                  Try adjusting your search criteria
+                  Try adjusting your search or filters
                   {hasActiveFilters && (
                     <>
                       {" "}or{" "}
@@ -354,7 +495,7 @@ function SearchContent() {
                         onClick={clearAllFilters}
                         className="font-medium text-orange-600 hover:text-orange-500 transition-colors"
                       >
-                        clear all filters
+                        clear filters
                       </button>
                     </>
                   )}
@@ -366,13 +507,25 @@ function SearchContent() {
                   {view === "grid" ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                       {sources.map((source) => (
-                        <SourceCard key={source.id} source={source} view="grid" />
+                        <SourceCard 
+                          key={source.id} 
+                          source={source} 
+                          view="grid"
+                          isSelected={selectedIds.has(source.id)}
+                          onToggleSelection={isMultiSelectMode ? () => toggleSelection(source.id) : undefined}
+                        />
                       ))}
                     </div>
                   ) : (
                     <div className="flex flex-col gap-0 divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white px-6">
                       {sources.map((source) => (
-                        <SourceCard key={source.id} source={source} view="list" />
+                        <SourceCard 
+                          key={source.id} 
+                          source={source} 
+                          view="list"
+                          isSelected={selectedIds.has(source.id)}
+                          onToggleSelection={isMultiSelectMode ? () => toggleSelection(source.id) : undefined}
+                        />
                       ))}
                     </div>
                   )}

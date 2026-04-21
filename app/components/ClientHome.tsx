@@ -7,6 +7,9 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Source, Contributor } from "../types";
 import { TagCloud } from "./TagCloud";
+import { SourceCard } from "./SourceCard";
+import { transformToHorizonConfig } from "@/app/lib/horizonConfig";
+import type { SourceConfig } from "@/app/lib/sourceConfig";
 
 // Re-export types for local usage
 export type { Source, Contributor };
@@ -189,6 +192,12 @@ export function AuthButton() {
                 Admin
               </Link>
             )}
+            <Link
+              href="/profile/votes"
+              className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              My Votes
+            </Link>
             <button
               onClick={() => signOut()}
               className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -303,9 +312,10 @@ export function MobileMenu() {
 interface TabViewProps {
   sources: Source[];
   contributors: Contributor[];
+  userVotedSourceIds?: Set<string>;
 }
 
-export function TabView({ sources, contributors }: TabViewProps) {
+export function TabView({ sources, contributors, userVotedSourceIds }: TabViewProps) {
   const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors' | 'tags'>('community');
 
   return (
@@ -358,7 +368,7 @@ export function TabView({ sources, contributors }: TabViewProps) {
       {activeTab === 'demo' ? (
         <DemoTab />
       ) : activeTab === 'community' ? (
-        <SourcesTab sources={sources} />
+        <SourcesTab sources={sources} userVotedSourceIds={userVotedSourceIds} />
       ) : activeTab === 'tags' ? (
         <TagsTab />
       ) : (
@@ -452,9 +462,10 @@ function DemoTab() {
 
 interface SourcesTabProps {
   sources: Source[];
+  userVotedSourceIds?: Set<string>;
 }
 
-function SourcesTab({ sources }: SourcesTabProps) {
+function SourcesTab({ sources, userVotedSourceIds }: SourcesTabProps) {
   return (
     <div>
       <div className="mb-8 text-center">
@@ -473,64 +484,13 @@ function SourcesTab({ sources }: SourcesTabProps) {
             </div>
           ) : (
             sources.slice(0, 10).map((source) => (
-              <article
+              <SourceCard
                 key={source.id}
-                className="group flex items-center gap-4 py-4 transition-colors hover:bg-gray-50/50"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-50 overflow-hidden">
-                  <img
-                    src={source.iconUrl || getSourceIcon(source.type)}
-                    alt={source.name}
-                    className="h-8 w-8 object-contain"
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-gray-900 group-hover:text-orange-500 transition-colors truncate"
-                    >
-                      {source.name}
-                    </a>
-                    <span className="shrink-0 text-xs text-gray-400">({source.type})</span>
-                    <span className="shrink-0 text-xs px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 font-medium">{source.category}</span>
-                  </div>
-
-                  <p className="mt-0.5 text-sm text-gray-600 line-clamp-1">
-                    {source.description}
-                  </p>
-
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                    <span>@{source.submitter.name || "anonymous"}</span>
-                    {source.tags.length > 0 && (
-                      <span className="text-gray-300">|</span>
-                    )}
-                    <div className="flex gap-1">
-                      {source.tags.slice(0, 3).map((tag) => (
-                        <Link
-                          key={tag}
-                          href={`/search?tags=${encodeURIComponent(tag)}`}
-                          className="text-orange-500/70 hover:text-orange-600 hover:underline transition-colors"
-                        >
-                          #{tag}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 pl-4">
-                  <button className="flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors">
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 4l-8 8h5v8h6v-8h5z"/>
-                    </svg>
-                    <span>{source.voteCount}</span>
-                  </button>
-                </div>
-              </article>
+                source={source}
+                view="list"
+                hasVoted={userVotedSourceIds?.has(source.id)}
+                userVotedSourceIds={userVotedSourceIds}
+              />
             ))
           )}
         </div>

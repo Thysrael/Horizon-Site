@@ -88,10 +88,29 @@ export async function POST(request: Request) {
       (tag): tag is string => tag.length > 0 && !isBlockedTag(tag)
     );
 
+    const trimmedName = name.trim();
+    const trimmedUrl = url.trim();
+
+    const existingName = await prisma.source.findFirst({
+      where: {
+        name: {
+          equals: trimmedName,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (existingName) {
+      return NextResponse.json(
+        { error: "A source with this name already exists" },
+        { status: 409 }
+      );
+    }
+
     const source = await prisma.source.create({
       data: {
-        url: url.trim(),
-        name: name.trim(),
+        url: trimmedUrl,
+        name: trimmedName,
         description: description?.trim() || null,
         type,
         category,
