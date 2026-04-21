@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sourceConfigSchemas } from "@/app/lib/sourceConfig";
 import { buildSourceUrl } from "@/app/lib/urlBuilder";
-import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
+import { normalizeTag, isBlockedTag, isEnglishTag } from "@/app/lib/tags";
 
 const SUBMITTABLE_SOURCE_TYPES = ["RSS", "REDDIT", "TELEGRAM", "GITHUB"];
 const VALID_CATEGORIES = Object.values(Category);
@@ -83,9 +83,12 @@ export async function POST(request: Request) {
     }
 
     const normalizedTags = tags.map((tag) => normalizeTag(tag));
-    const droppedTags = normalizedTags.filter((tag) => isBlockedTag(tag));
+    const droppedTags = normalizedTags.filter(
+      (tag) => isBlockedTag(tag) || !isEnglishTag(tag)
+    );
     const validatedTags = normalizedTags.filter(
-      (tag): tag is string => tag.length > 0 && !isBlockedTag(tag)
+      (tag): tag is string =>
+        tag.length > 0 && !isBlockedTag(tag) && isEnglishTag(tag)
     );
 
     const trimmedName = name.trim();

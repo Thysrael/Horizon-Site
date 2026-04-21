@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { normalizeTag, isBlockedTag } from "../lib/tags";
+import { normalizeTag, isBlockedTag, isEnglishTag } from "../lib/tags";
 
 interface TagSuggestion {
   name: string;
@@ -112,6 +112,12 @@ export function TagInput({
 
     if (isBlockedTag(normalized)) {
       setWarning(`"${normalized}" is too generic. Try a more specific tag.`);
+      setTimeout(() => setWarning(null), 5000);
+      return;
+    }
+
+    if (!isEnglishTag(normalized)) {
+      setWarning(`"${normalized}" must contain only English letters, numbers, and hyphens`);
       setTimeout(() => setWarning(null), 5000);
       return;
     }

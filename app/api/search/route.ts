@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Category } from "@prisma/client";
 import { searchSources } from "@/app/lib/data";
 import { normalizeTag } from "@/app/lib/tags";
+import { resolveTagAlias } from "@/app/lib/tagAliases";
 
 const VALID_CATEGORIES = Object.values(Category);
 
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
       : undefined;
 
     const tags = tagsParam
-      ? tagsParam.split(",").map((tag) => normalizeTag(tag.trim())).filter(Boolean)
+      ? tagsParam.split(",").map((tag) => resolveTagAlias(normalizeTag(tag.trim()))).filter(Boolean)
       : undefined;
 
     const filters = {

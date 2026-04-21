@@ -51,3 +51,8 @@ export function normalizeTag(tag: string): string {
 export function isBlockedTag(tag: string): boolean {
   return BLOCKED_TAGS.includes(normalizeTag(tag));
 }
+
+export function isEnglishTag(tag: string): boolean {
+  // Only allow English letters, numbers, and hyphens
+  return /^[a-z0-9\-]+$/.test(tag);
+}

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/app/lib/admin";
 import { Status, SourceType, Category } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
+import { normalizeTag, isBlockedTag, isEnglishTag } from "@/app/lib/tags";
 
 // GET /api/admin/sources - List all sources with optional filters
 export async function GET(request: NextRequest) {
@@ -81,9 +81,11 @@ export async function PATCH(request: NextRequest) {
     let droppedTags: string[] = [];
     if (tags !== undefined) {
       const normalizedTags = tags.map((tag: string) => normalizeTag(tag));
-      droppedTags = normalizedTags.filter((tag: string) => isBlockedTag(tag));
+      droppedTags = normalizedTags.filter(
+        (tag: string) => isBlockedTag(tag) || !isEnglishTag(tag)
+      );
       updateData.tags = normalizedTags.filter(
-        (tag: string) => tag.length > 0 && !isBlockedTag(tag)
+        (tag: string) => tag.length > 0 && !isBlockedTag(tag) && isEnglishTag(tag)
       );
     }
 
