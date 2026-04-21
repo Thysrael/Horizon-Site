@@ -365,8 +365,8 @@ function SearchContent() {
                 </div>
               )}
               
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div className="relative max-w-sm flex-1">
                   <input
                     type="text"
                     value={searchQuery}
@@ -388,62 +388,64 @@ function SearchContent() {
                   )}
                 </div>
                 
-                {!isMultiSelectMode && (
+                <div className="flex items-center gap-2">
+                  {!isMultiSelectMode && (
+                    <button
+                      onClick={() => setIsMultiSelectMode(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Export
+                    </button>
+                  )}
+
                   <button
-                    onClick={() => setIsMultiSelectMode(true)}
+                    onClick={() => setIsSidebarOpen(true)}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
-                    Export
+                    Filter
+                    {activeFiltersCount > 0 && (
+                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white">
+                        {activeFiltersCount}
+                      </span>
+                    )}
                   </button>
-                )}
 
-                <button
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-all"
-                >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  Filter
-                  {activeFiltersCount > 0 && (
-                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-xs font-medium text-white">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
-
-                <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm" role="group">
-                  <button
-                    onClick={() => handleViewChange("grid")}
-                    className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
-                      view === "grid"
-                        ? "bg-orange-50 text-orange-600 shadow-sm"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                    aria-pressed={view === "grid"}
-                    aria-label="Grid view"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleViewChange("list")}
-                    className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
-                      view === "list"
-                        ? "bg-orange-50 text-orange-600 shadow-sm"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    }`}
-                    aria-pressed={view === "list"}
-                    aria-label="List view"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  </button>
+                  <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 shadow-sm" role="group">
+                    <button
+                      onClick={() => handleViewChange("grid")}
+                      className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
+                        view === "grid"
+                          ? "bg-orange-50 text-orange-600 shadow-sm"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                      aria-pressed={view === "grid"}
+                      aria-label="Grid view"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleViewChange("list")}
+                      className={`inline-flex items-center rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
+                        view === "list"
+                          ? "bg-orange-50 text-orange-600 shadow-sm"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                      aria-pressed={view === "list"}
+                      aria-label="List view"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
