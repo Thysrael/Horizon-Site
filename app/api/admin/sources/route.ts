@@ -78,6 +78,7 @@ export async function PATCH(request: NextRequest) {
     if (description !== undefined) updateData.description = description;
     if (type !== undefined) updateData.type = type;
     if (category !== undefined) updateData.category = category;
+    if (iconUrl !== undefined) updateData.iconUrl = iconUrl;
     let droppedTags: string[] = [];
     if (tags !== undefined) {
       const normalizedTags = tags.map((tag: string) => normalizeTag(tag));
