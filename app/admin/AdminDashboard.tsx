@@ -268,7 +268,7 @@ export default function AdminDashboard({
     } catch {
       showError("Network error while updating source");
     }
-  }, [editingSource, showError, showSuccess, updateStatsAfterStatusChange]);
+  }, [editingSource, editTags, showError, showSuccess, updateStatsAfterStatusChange]);
 
   const filteredSources = allSources.filter((source) => {
     if (filterStatus && source.status !== filterStatus) return false;

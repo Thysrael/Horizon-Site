@@ -74,7 +74,7 @@ export const TAG_ALIASES: Record<string, string[]> = {
     "os": ["操作系统", "operating-system"],
     "performance": ["性能优化", "Performance"],
     "php": ["PHP", "php语言"],
-    "pl": ["编程语言", "programming-languages", "Programming Languages","语言"],
+    "pl": ["编程语言", "programming-languages", "Programming Languages", "语言"],
     "postgres": ["PostgreSQL", "Postgres", "PG", "pg", "postgresql"],
     "python": ["Python", "python编程", "py"],
     "react": ["React", "ReactJS", "react.js"],
