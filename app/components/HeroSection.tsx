@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   AnimatedSlogan,
   FloatingParticles,
@@ -16,12 +17,15 @@ export function HeroSection() {
           <AnimatedSlogan />
           <TypingSubtitle />
           <div className="mt-10 flex justify-center gap-4">
-            <button className="group flex items-center gap-2 rounded-full bg-gray-900 px-8 py-4 text-base font-medium text-white shadow-2xl shadow-gray-900/20 hover:shadow-gray-900/40 hover:-translate-y-1 transition-all duration-300">
+            <Link
+              href="/docs/quick_start"
+              className="group flex items-center gap-2 rounded-full bg-gray-900 px-8 py-4 text-base font-medium text-white shadow-2xl shadow-gray-900/20 hover:shadow-gray-900/40 hover:-translate-y-1 transition-all duration-300"
+            >
               <svg className="h-5 w-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Quick Start
-            </button>
+            </Link>
             <a
               href="https://github.com/Thysrael/Horizon"
               target="_blank"

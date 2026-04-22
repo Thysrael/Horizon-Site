@@ -101,17 +101,60 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
               </div>
             </div>
           </div>
+          <div className="relative group">
+            <Link
+              href="/docs"
+              className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-orange-500 transition-colors"
+            >
+              Docs
+              <svg
+                className="h-3 w-3 transition-transform group-hover:rotate-180"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </Link>
+            <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="w-56 rounded-xl border border-gray-200 bg-white shadow-lg py-2">
+                <Link
+                  href="/docs/configuration"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
+                  Configuration Guide
+                </Link>
+                <Link
+                  href="/docs/scoring"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
+                  Scoring System
+                </Link>
+                <Link
+                  href="/docs/scrapers"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
+                  Source Scrapers
+                </Link>
+                <Link
+                  href="/docs/api"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                >
+                  API Reference
+                </Link>
+              </div>
+            </div>
+          </div>
           <Link
-            href="/doc"
+            href="/docs/about_us"
             className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
           >
-            Documents
-          </Link>
-          <Link
-            href="/about"
-            className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            About
+            About Us
           </Link>
         </div>
 
