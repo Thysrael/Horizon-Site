@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Source } from "@/app/types";
 import { VoteButton } from "./VoteButton";
 import { SourceDetailModal } from "./SourceDetailModal";
+import { getSourceIcon, getSourceIconFallback } from "@/app/lib/icons";
 
 interface SourceCardProps {
   source: Source;
@@ -15,23 +16,9 @@ interface SourceCardProps {
   onToggleSelection?: () => void;
 }
 
-function getSourceIcon(type: string, iconUrl?: string | null): string {
-  if (iconUrl) return iconUrl;
-  const icons: Record<string, string> = {
-    HACKER_NEWS: "/hackernews-svgrepo-com.svg",
-    RSS: "/rss-svgrepo-com.svg",
-    REDDIT: "/reddit-svgrepo-com.svg",
-    TELEGRAM: "/telegram-svgrepo-com.svg",
-    GITHUB: "/github-svgrepo-com.svg",
-    NEWSLETTER: "/rss-svgrepo-com.svg",
-    OTHER: "/rss-svgrepo-com.svg",
-  };
-  return icons[type] || "/rss-svgrepo-com.svg";
-}
-
 export function SourceCard({ source, view, hasVoted, userVotedSourceIds, isSelected, onToggleSelection }: SourceCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const iconSrc = getSourceIcon(source.type, source.iconUrl);
+  const [imgSrc, setImgSrc] = useState(getSourceIcon(source.type, source.iconUrl));
 
   if (view === 'grid') {
     return (
@@ -43,9 +30,10 @@ export function SourceCard({ source, view, hasVoted, userVotedSourceIds, isSelec
           <div className="mb-4 flex items-center justify-between">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-50 overflow-hidden">
               <img
-                src={iconSrc}
+                src={imgSrc}
                 alt={source.name}
                 className="h-10 w-10 object-contain"
+                onError={() => setImgSrc(getSourceIconFallback(source.type))}
               />
             </div>
             {onToggleSelection && (
@@ -139,9 +127,10 @@ export function SourceCard({ source, view, hasVoted, userVotedSourceIds, isSelec
         )}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-50 overflow-hidden">
           <img
-            src={iconSrc}
+            src={imgSrc}
             alt={source.name}
             className="h-8 w-8 object-contain"
+            onError={() => setImgSrc(getSourceIconFallback(source.type))}
           />
         </div>
 

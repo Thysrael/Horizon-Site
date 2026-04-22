@@ -25,9 +25,12 @@ I read every email and usually reply within 2-3 business days.
 
 ## Get Involved
 
-- **GitHub**: [github.com/thysrael/horizon](https://github.com/thysrael/horizon)
-- **Issues**: Report bugs or request features
-- **Contribute**: Submit PRs to improve Horizon
+Both projects are open for contributions:
+
+- **Horizon**: [github.com/thysrael/horizon](https://github.com/thysrael/horizon)
+- **Horizon-Site**: [github.com/Thysrael/Horizon-Site](https://github.com/Thysrael/Horizon-Site)
+
+You can report bugs, request features, or submit pull requests to either repository.
 
 ## License
 

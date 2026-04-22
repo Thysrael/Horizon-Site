@@ -11,22 +11,7 @@ import { SourceCard } from "./SourceCard";
 import { transformToHorizonConfig } from "@/app/lib/horizonConfig";
 import type { SourceConfig } from "@/app/lib/sourceConfig";
 
-// Re-export types for local usage
 export type { Source, Contributor };
-
-function getSourceIcon(type: string, iconUrl?: string | null): string {
-  if (iconUrl) return iconUrl;
-  const icons: Record<string, string> = {
-    HACKER_NEWS: "/hackernews-svgrepo-com.svg",
-    RSS: "/rss-svgrepo-com.svg",
-    REDDIT: "/reddit-svgrepo-com.svg",
-    TELEGRAM: "/telegram-svgrepo-com.svg",
-    GITHUB: "/github-svgrepo-com.svg",
-    NEWSLETTER: "/rss-svgrepo-com.svg",
-    OTHER: "/rss-svgrepo-com.svg",
-  };
-  return icons[type] || "/rss-svgrepo-com.svg";
-}
 
 export function TypingSubtitle() {
   const [displayText, setDisplayText] = useState("");
