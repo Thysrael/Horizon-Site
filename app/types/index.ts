@@ -28,7 +28,9 @@ export interface Contributor {
 export interface CategoryInfo {
   id: Category;
   name: string;
+  name_zh: string;
   description: string;
+  description_zh: string;
   keywords: string[];
 }
 
