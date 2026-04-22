@@ -58,7 +58,7 @@ cp data/config.example.json data/config.json  # Customize your sources
 
 Here's what a config looks like:
 
-```jsonc
+```json
 {
   "ai": {
     "provider": "openai",       // or "anthropic", "gemini", "doubao", "minimax"
