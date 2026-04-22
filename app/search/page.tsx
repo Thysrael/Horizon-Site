@@ -32,6 +32,8 @@ function SearchLoading() {
   );
 }
 
+const ITEMS_PER_PAGE = 12;
+
 function SearchContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,6 +44,7 @@ function SearchContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sources, setSources] = useState<Source[]>([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -51,14 +54,17 @@ function SearchContent() {
   const categoryParam = searchParams.get("category") as Category | null;
   const tagsParam = searchParams.get("tags");
   const queryParam = searchParams.get("q") || "";
+  const pageParam = searchParams.get("page");
 
   const selectedCategory = categoryParam || null;
   const selectedTags = tagsParam ? tagsParam.split(",").filter(Boolean) : [];
   const query = queryParam;
+  const currentPage = pageParam ? parseInt(pageParam, 10) : 1;
 
   const [currentCategory, setCurrentCategory] = useState<Category | null>(selectedCategory);
   const [currentTags, setCurrentTags] = useState<string[]>(selectedTags);
   const [searchQuery, setSearchQuery] = useState(query);
+  const [page, setPage] = useState(currentPage);
 
   useEffect(() => {
     async function fetchSources() {
@@ -68,24 +74,28 @@ function SearchContent() {
         if (selectedCategory) params.set("category", selectedCategory);
         if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
         if (query) params.set("q", query);
+        params.set("page", page.toString());
+        params.set("limit", ITEMS_PER_PAGE.toString());
 
         const response = await fetch(`/api/search?${params.toString()}`);
         if (!response.ok) throw new Error("Failed to fetch sources");
-        
+
         const data = await response.json();
         setSources(data.sources || []);
         setTotalCount(data.total || 0);
+        setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error("Error fetching sources:", error);
         setSources([]);
         setTotalCount(0);
+        setTotalPages(1);
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchSources();
-  }, [selectedCategory, tagsParam, query]);
+  }, [selectedCategory, tagsParam, query, page]);
 
   useEffect(() => {
     const savedView = localStorage.getItem(LOCAL_STORAGE_KEY) as "grid" | "list" | null;
@@ -120,7 +130,7 @@ function SearchContent() {
     (currentCategory ? 1 : 0) + currentTags.length;
 
   const updateUrl = useCallback(
-    (category: Category | null, tags: string[], queryValue: string) => {
+    (category: Category | null, tags: string[], queryValue: string, pageValue: number = 1) => {
       const params = new URLSearchParams();
 
       if (category) {
@@ -135,6 +145,10 @@ function SearchContent() {
         params.set("q", queryValue.trim());
       }
 
+      if (pageValue > 1) {
+        params.set("page", pageValue.toString());
+      }
+
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.push(newUrl, { scroll: false });
     },
@@ -144,32 +158,42 @@ function SearchContent() {
   const selectCategory = (categoryId: Category | "" | null) => {
     const category = categoryId === "" ? null : (categoryId as Category);
     setCurrentCategory(category);
-    updateUrl(category, currentTags, searchQuery);
+    setPage(1);
+    updateUrl(category, currentTags, searchQuery, 1);
   };
 
   const handleTagsChange = (tags: string[]) => {
     setCurrentTags(tags);
-    updateUrl(currentCategory, tags, searchQuery);
+    setPage(1);
+    updateUrl(currentCategory, tags, searchQuery, 1);
   };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    updateUrl(currentCategory, currentTags, value);
+    setPage(1);
+    updateUrl(currentCategory, currentTags, value, 1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    updateUrl(currentCategory, currentTags, searchQuery, newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const clearAllFilters = () => {
     setCurrentCategory(null);
     setCurrentTags([]);
+    setPage(1);
     router.push(pathname + (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""), { scroll: false });
   };
 
   const clearSearch = () => {
     setSearchQuery("");
-    updateUrl(currentCategory, currentTags, "");
+    setPage(1);
+    updateUrl(currentCategory, currentTags, "", 1);
   };
 
   const hasActiveFilters = selectedCategory || selectedTags.length > 0;
-  const hasSearchQuery = !!searchQuery;
 
   const toggleSelection = (id: string) => {
     setSelectedIds((prev) => {
@@ -439,7 +463,9 @@ function SearchContent() {
             </div>
 
             <div className="text-sm text-gray-600">
-              Showing <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
+              Showing <span className="font-semibold text-gray-900">
+                {totalCount > 0 ? (page - 1) * ITEMS_PER_PAGE + 1 : 0}-{Math.min(page * ITEMS_PER_PAGE, totalCount)}
+              </span> of <span className="font-semibold text-gray-900">{totalCount}</span>{" "}
               result{totalCount !== 1 ? "s" : ""}
             </div>
 
@@ -497,9 +523,9 @@ function SearchContent() {
                   {view === "grid" ? (
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                       {sources.map((source) => (
-                        <SourceCard 
-                          key={source.id} 
-                          source={source} 
+                        <SourceCard
+                          key={source.id}
+                          source={source}
                           view="grid"
                           isSelected={selectedIds.has(source.id)}
                           onToggleSelection={isMultiSelectMode ? () => toggleSelection(source.id) : undefined}
@@ -509,9 +535,9 @@ function SearchContent() {
                   ) : (
                     <div className="flex flex-col gap-0 divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white px-6">
                       {sources.map((source) => (
-                        <SourceCard 
-                          key={source.id} 
-                          source={source} 
+                        <SourceCard
+                          key={source.id}
+                          source={source}
                           view="list"
                           isSelected={selectedIds.has(source.id)}
                           onToggleSelection={isMultiSelectMode ? () => toggleSelection(source.id) : undefined}
@@ -519,12 +545,114 @@ function SearchContent() {
                       ))}
                     </div>
                   )}
+
+                  {totalPages > 1 && (
+                    <Pagination
+                      currentPage={page}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  )}
                 </>
               )
             )}
           </main>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-8">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-700 transition-colors"
+        aria-label="Previous page"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div className="flex items-center gap-1">
+        {getPageNumbers().map((pageNum, index) => (
+          <div key={index}>
+            {pageNum === "..." ? (
+              <span className="inline-flex items-center justify-center px-3 py-2 text-sm text-gray-400">
+                ...
+              </span>
+            ) : (
+              <button
+                onClick={() => onPageChange(pageNum as number)}
+                className={`inline-flex items-center justify-center min-w-[40px] rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  currentPage === pageNum
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+                aria-label={`Page ${pageNum}`}
+                aria-current={currentPage === pageNum ? "page" : undefined}
+              >
+                {pageNum}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-700 transition-colors"
+        aria-label="Next page"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   );
 }

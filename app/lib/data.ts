@@ -3,35 +3,38 @@ import { prisma } from "@/lib/prisma";
 import { Source, Status, Category } from "@/app/types";
 import { normalizeTag } from "./tags";
 import { resolveTagAlias } from "./tagAliases";
+import { Prisma } from "@prisma/client";
 
 export const getSources = cache(async function getSources(searchQuery?: string) {
   const normalizedQuery = searchQuery ? normalizeTag(searchQuery) : undefined;
 
+  const where: Prisma.SourceWhereInput = {
+    status: "APPROVED",
+    ...(normalizedQuery && {
+      OR: [
+        {
+          tags: {
+            hasSome: [normalizedQuery],
+          },
+        },
+        {
+          name: {
+            contains: normalizedQuery,
+            mode: "insensitive" as const,
+          },
+        },
+        {
+          description: {
+            contains: normalizedQuery,
+            mode: "insensitive" as const,
+          },
+        },
+      ],
+    }),
+  };
+
   return await prisma.source.findMany({
-    where: {
-      status: "APPROVED",
-      ...(normalizedQuery && {
-        OR: [
-          {
-            tags: {
-              hasSome: [normalizedQuery],
-            },
-          },
-          {
-            name: {
-              contains: normalizedQuery,
-              mode: "insensitive",
-            },
-          },
-          {
-            description: {
-              contains: normalizedQuery,
-              mode: "insensitive",
-            },
-          },
-        ],
-      }),
-    },
+    where,
     orderBy: {
       voteCount: "desc",
     },
@@ -50,12 +53,20 @@ export interface SearchFilters {
   category?: Category;
   tags?: string[];
   query?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedSources {
+  sources: Source[];
+  total: number;
+  totalPages: number;
 }
 
 export const searchSources = cache(async function searchSources(
   filters: SearchFilters
-): Promise<Source[]> {
-  const { category, tags, query } = filters;
+): Promise<PaginatedSources> {
+  const { category, tags, query, page = 1, limit = 12 } = filters;
 
   // Resolve tag aliases for query (e.g., "人工智能" -> "artificial-intelligence")
   const resolvedQuery = query ? resolveTagAlias(normalizeTag(query)) : undefined;
@@ -63,28 +74,44 @@ export const searchSources = cache(async function searchSources(
   // Resolve tag aliases for tag filters
   const resolvedTags = tags?.map((tag) => resolveTagAlias(normalizeTag(tag)));
 
-  return await prisma.source.findMany({
-    where: {
-      status: "APPROVED",
-      ...(category && { category: { equals: category } }),
-      ...(resolvedTags && resolvedTags.length > 0 && { tags: { hasEvery: resolvedTags } }),
-      ...(resolvedQuery && {
-        OR: [
-          { tags: { hasSome: [resolvedQuery] } },
-          { name: { contains: resolvedQuery, mode: "insensitive" } },
-          { description: { contains: resolvedQuery, mode: "insensitive" } },
-        ],
-      }),
-    },
-    orderBy: { voteCount: "desc" },
-    include: {
-      submitter: {
-        select: {
-          name: true,
+  const where: Prisma.SourceWhereInput = {
+    status: "APPROVED",
+    ...(category && { category }),
+    ...(resolvedTags && resolvedTags.length > 0 && { tags: { hasEvery: resolvedTags } }),
+    ...(resolvedQuery && {
+      OR: [
+        { tags: { hasSome: [resolvedQuery] } },
+        { name: { contains: resolvedQuery, mode: "insensitive" as const } },
+        { description: { contains: resolvedQuery, mode: "insensitive" as const } },
+      ],
+    }),
+  };
+
+  const [sources, total] = await Promise.all([
+    prisma.source.findMany({
+      where,
+      orderBy: [
+        { voteCount: "desc" },
+        { id: "asc" },
+      ],
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        submitter: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.source.count({ where }),
+  ]);
+
+  return {
+    sources,
+    total,
+    totalPages: Math.ceil(total / limit),
+  };
 });
 
 export const getContributors = cache(async function getContributors() {

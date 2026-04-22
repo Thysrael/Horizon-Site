@@ -13,6 +13,8 @@ export async function GET(request: Request) {
     const categoryParam = searchParams.get("category");
     const tagsParam = searchParams.get("tags");
     const query = searchParams.get("q");
+    const pageParam = searchParams.get("page");
+    const limitParam = searchParams.get("limit");
 
     const category = categoryParam && VALID_CATEGORIES.includes(categoryParam as Category)
       ? (categoryParam as Category)
@@ -22,18 +24,20 @@ export async function GET(request: Request) {
       ? tagsParam.split(",").map((tag) => resolveTagAlias(normalizeTag(tag.trim()))).filter(Boolean)
       : undefined;
 
+    const page = pageParam ? parseInt(pageParam, 10) : 1;
+    const limit = limitParam ? parseInt(limitParam, 10) : 12;
+
     const filters = {
       ...(category && { category }),
       ...(tags && tags.length > 0 && { tags }),
       ...(query && { query }),
+      page,
+      limit,
     };
 
-    const sources = await searchSources(filters);
+    const result = await searchSources(filters);
 
-    return NextResponse.json({
-      sources,
-      total: sources.length,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Search error:", error);
     return NextResponse.json(

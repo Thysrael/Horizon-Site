@@ -2,11 +2,34 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { TagCloud as ReactTagCloud, type Tag, type RendererFunction } from "react-tagcloud";
 
 interface TagWithCount {
   name: string;
   count: number;
 }
+
+const customRenderer: RendererFunction = (tag, size, color) => {
+  return (
+    <span
+      key={tag.value}
+      className="tag-cloud-tag inline-block transition-all duration-200 hover:scale-110 hover:-translate-y-0.5 cursor-pointer"
+      style={{
+        color,
+        fontSize: size,
+        margin: "3px 5px",
+        lineHeight: 1.4,
+      }}
+    >
+      <Link
+        href={`/search?tags=${encodeURIComponent(tag.value)}`}
+        className="text-current no-underline hover:text-current"
+      >
+        {tag.value}
+      </Link>
+    </span>
+  );
+};
 
 export function TagCloud() {
   const [tags, setTags] = useState<TagWithCount[]>([]);
@@ -51,49 +74,27 @@ export function TagCloud() {
     );
   }
 
-  const maxCount = Math.max(...tags.map((t) => t.count));
-  const minCount = Math.min(...tags.map((t) => t.count));
-
-  function getTagStyle(count: number): { fontSize: string; opacity: number; fontWeight: number } {
-    if (maxCount === minCount) {
-      return { fontSize: "1rem", opacity: 1, fontWeight: 500 };
-    }
-
-    const ratio = (count - minCount) / (maxCount - minCount);
-
-    const minSize = 0.875;
-    const maxSize = 2.5;
-    const fontSize = minSize + (maxSize - minSize) * ratio;
-    const opacity = 0.6 + 0.4 * ratio;
-    const fontWeight = 400 + Math.round(300 * ratio);
-
-    return {
-      fontSize: `${fontSize}rem`,
-      opacity,
-      fontWeight,
-    };
-  }
+  const data: Tag[] = tags.map((tag) => ({
+    value: tag.name,
+    count: tag.count,
+  }));
 
   return (
-    <div className="py-8">
-      <div className="flex flex-wrap justify-center items-baseline gap-x-3 gap-y-2 max-w-5xl mx-auto">
-        {tags.map((tag) => {
-          const style = getTagStyle(tag.count);
-          return (
-            <Link
-              key={tag.name}
-              href={`/search?tags=${encodeURIComponent(tag.name)}`}
-              className="text-gray-600 hover:text-orange-600 transition-colors"
-              style={{
-                fontSize: style.fontSize,
-                opacity: style.opacity,
-                fontWeight: style.fontWeight,
-              }}
-            >
-              {tag.name}
-            </Link>
-          );
-        })}
+    <div className="py-8 flex justify-center">
+      <div className="max-w-3xl w-full text-center">
+        <ReactTagCloud
+          tags={data}
+          minSize={13}
+          maxSize={36}
+          shuffle={true}
+          renderer={customRenderer}
+          colorOptions={{
+            luminosity: "bright",
+            hue: "orange",
+            format: "hex",
+          }}
+          className="tag-cloud"
+        />
       </div>
     </div>
   );

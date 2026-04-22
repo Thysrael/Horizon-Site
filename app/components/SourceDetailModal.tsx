@@ -64,9 +64,16 @@ export function SourceDetailModal({
     };
   }, [isOpen, handleEscape, source]);
 
+  const [imgSrc, setImgSrc] = useState<string>("");
+
+  useEffect(() => {
+    if (source) {
+      setImgSrc(getSourceIcon(source.type, source.iconUrl));
+    }
+  }, [source]);
+
   if (!isOpen || !source) return null;
 
-  const [imgSrc, setImgSrc] = useState(getSourceIcon(source.type, source.iconUrl));
   const hasVoted = userVotedSourceIds?.has(source.id) ?? false;
 
   const displaySource = fullSource || source;

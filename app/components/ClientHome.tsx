@@ -482,9 +482,12 @@ function SourcesTab({ sources, userVotedSourceIds }: SourcesTabProps) {
 
         {sources.length > 10 && (
           <div className="mt-6 flex justify-center">
-            <button className="rounded-full border border-gray-200 bg-white px-8 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-              Load More
-            </button>
+            <Link
+              href="/search"
+              className="rounded-full border border-gray-200 bg-white px-8 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            >
+              View all sources
+            </Link>
           </div>
         )}
       </div>
