@@ -83,19 +83,11 @@ All sources are configured under the top-level `sources` key in `config.json`.
 ```json
 {
   "sources": {
-    "github": [
-      {
-        "type": "user_events",
-        "username": "gvanrossum",
-        "enabled": true
-      },
-      {
-        "type": "repo_releases",
-        "owner": "python",
-        "repo": "cpython",
-        "enabled": true
-      }
-    ]
+    "github": {
+      "type": "user_events",
+      "username": "karpathy",
+      "enabled": true
+    }
   }
 }
 ```

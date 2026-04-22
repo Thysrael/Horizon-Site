@@ -165,7 +165,7 @@ export function formatHorizonConfigJSON(config: HorizonConfig): string {
         entry.repo = config.config.repo;
       }
       entry.enabled = config.config.enabled ?? true;
-      return JSON.stringify([entry], null, 2);
+      return JSON.stringify(entry, null, 2);
     
     case "rss":
     default:
@@ -184,7 +184,7 @@ export function formatAllConfigsTOML(configs: HorizonConfig[]): string {
 }
 
 export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
-  const result: Record<string, unknown> = {};
+  const sources: Record<string, unknown> = {};
   const grouped: Record<string, HorizonConfig[]> = {};
   
   for (const config of configs) {
@@ -199,7 +199,7 @@ export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
       case "hackernews": {
         if (items.length > 0) {
           const config = items[0].config;
-          result[sourceType] = {
+          sources[sourceType] = {
             enabled: config.enabled ?? true,
             fetch_top_stories: config.fetch_top_stories ?? 10,
             min_score: config.min_score ?? 200
@@ -219,7 +219,7 @@ export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
           }
           return ch;
         });
-        result[sourceType] = {
+        sources[sourceType] = {
           enabled: true,
           channels
         };
@@ -238,15 +238,17 @@ export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
           if (item.config.min_score) sub.min_score = item.config.min_score;
           return sub;
         });
-        result[sourceType] = {
+        sources[sourceType] = {
           enabled: true,
-          subreddits
+          subreddits,
+          users: [],
+          fetch_comments: 10
         };
         break;
       }
       
       case "github": {
-        result[sourceType] = items.map(item => {
+        sources[sourceType] = items.map(item => {
           const entry: Record<string, unknown> = {
             type: item.type,
             enabled: item.config.enabled ?? true
@@ -264,7 +266,7 @@ export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
       
       case "rss":
       default: {
-        result[sourceType] = items.map(item => {
+        sources[sourceType] = items.map(item => {
           const entry: Record<string, unknown> = {
             name: item.name,
             url: item.config.url,
@@ -280,5 +282,5 @@ export function formatAllConfigsJSON(configs: HorizonConfig[]): string {
     }
   }
   
-  return JSON.stringify(result, null, 2);
+  return JSON.stringify({ sources }, null, 2);
 }
