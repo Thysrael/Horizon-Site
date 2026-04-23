@@ -130,6 +130,37 @@ export function resolveTagAlias(input: string): string {
   return normalized;
 }
 
+export function resolveTagAliasesForSearchQuery(input: string): string[] {
+  const normalized = input.toLowerCase().trim();
+  if (!normalized) {
+    return [];
+  }
+
+  const exact = REVERSE_ALIAS_MAP.get(normalized);
+  if (exact) {
+    return [exact];
+  }
+
+  const matches = new Set<string>();
+
+  for (const [mainTag, aliases] of Object.entries(TAG_ALIASES)) {
+    if (mainTag.includes(normalized)) {
+      matches.add(mainTag);
+      continue;
+    }
+
+    if (aliases.some((alias) => alias.toLowerCase().includes(normalized))) {
+      matches.add(mainTag);
+    }
+  }
+
+  if (matches.size > 0) {
+    return Array.from(matches);
+  }
+
+  return [normalized];
+}
+
 export function resolveTagAliases(tags: string[]): string[] {
   return tags.map((tag) => resolveTagAlias(tag));
 }

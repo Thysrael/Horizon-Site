@@ -2,7 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { Source, Status, Category } from "@/app/types";
 import { normalizeTag } from "./tags";
-import { resolveTagAlias } from "./tagAliases";
+import { resolveTagAlias, resolveTagAliasesForSearchQuery } from "./tagAliases";
 import { Prisma } from "@prisma/client";
 
 export const getSources = cache(async function getSources(searchQuery?: string) {
@@ -68,8 +68,10 @@ export const searchSources = cache(async function searchSources(
 ): Promise<PaginatedSources> {
   const { category, tags, query, page = 1, limit = 12 } = filters;
 
-  // Resolve tag aliases for query (e.g., "人工智能" -> "artificial-intelligence")
-  const resolvedQuery = query ? resolveTagAlias(normalizeTag(query)) : undefined;
+  const normalizedQuery = query ? normalizeTag(query) : undefined;
+  const queryTagCandidates = normalizedQuery
+    ? resolveTagAliasesForSearchQuery(normalizedQuery)
+    : undefined;
 
   // Resolve tag aliases for tag filters
   const resolvedTags = tags?.map((tag) => resolveTagAlias(normalizeTag(tag)));
@@ -78,11 +80,13 @@ export const searchSources = cache(async function searchSources(
     status: "APPROVED",
     ...(category && { category }),
     ...(resolvedTags && resolvedTags.length > 0 && { tags: { hasEvery: resolvedTags } }),
-    ...(resolvedQuery && {
+    ...(normalizedQuery && {
       OR: [
-        { tags: { hasSome: [resolvedQuery] } },
-        { name: { contains: resolvedQuery, mode: "insensitive" as const } },
-        { description: { contains: resolvedQuery, mode: "insensitive" as const } },
+        ...(queryTagCandidates && queryTagCandidates.length > 0
+          ? [{ tags: { hasSome: queryTagCandidates } }]
+          : []),
+        { name: { contains: normalizedQuery, mode: "insensitive" as const } },
+        { description: { contains: normalizedQuery, mode: "insensitive" as const } },
       ],
     }),
   };
