@@ -4,13 +4,13 @@ title: Configuration Guide
 
 # Configuration Guide
 
-Horizon is configured through two files: a `.env` file for API keys and a `data/config.json` file for sources, AI provider, and filtering options.
+Horizon is configured through two files: `.env` for secrets and `data/config.json` for sources, AI provider, filtering, and delivery settings.
 
 ## AI Providers
 
-Configure which AI model scores and summarizes your content.
+Configure which model scores and summarizes your content.
 
-**Anthropic Claude**:
+**Anthropic Claude**
 
 ```json
 {
@@ -22,7 +22,7 @@ Configure which AI model scores and summarizes your content.
 }
 ```
 
-**OpenAI**:
+**OpenAI**
 
 ```json
 {
@@ -34,7 +34,7 @@ Configure which AI model scores and summarizes your content.
 }
 ```
 
-**MiniMax**:
+**MiniMax**
 
 ```json
 {
@@ -46,9 +46,9 @@ Configure which AI model scores and summarizes your content.
 }
 ```
 
-Available models: `MiniMax-M2.7`, `MiniMax-M2.7-highspeed`, `MiniMax-M2.5`, `MiniMax-M2.5-highspeed`
+Available MiniMax models: `MiniMax-M2.7`, `MiniMax-M2.7-highspeed`, `MiniMax-M2.5`, `MiniMax-M2.5-highspeed`
 
-**Aliyun DashScope** (OpenAI-compatible):
+**Aliyun DashScope** (OpenAI-compatible)
 
 ```json
 {
@@ -60,34 +60,41 @@ Available models: `MiniMax-M2.7`, `MiniMax-M2.7-highspeed`, `MiniMax-M2.5`, `Min
 }
 ```
 
-Use the [DashScope compatible-mode](https://help.aliyun.com/zh/dashscope/developer-reference/use-dashscope-by-calling-openai-api) endpoint. Set `DASHSCOPE_API_KEY` in your `.env`. Optional: set `base_url` to override the default `https://dashscope.aliyuncs.com/compatible-mode/v1`.
+Set `DASHSCOPE_API_KEY` in `.env`. You can also set `base_url` to override the default compatible-mode endpoint.
 
-**Custom Base URL** (for proxies):
+**Custom base URL**
 
 ```json
 {
   "ai": {
     "provider": "anthropic",
-    "base_url": "https://your-proxy.com/v1",
-    ...
+    "base_url": "https://your-proxy.com/v1"
   }
 }
 ```
 
 ## Information Sources
 
-All sources are configured under the top-level `sources` key in `config.json`.
+All sources live under the top-level `sources` key.
 
 ### GitHub
 
 ```json
 {
   "sources": {
-    "github": {
-      "type": "user_events",
-      "username": "karpathy",
-      "enabled": true
-    }
+    "github": [
+      {
+        "type": "user_events",
+        "username": "gvanrossum",
+        "enabled": true
+      },
+      {
+        "type": "repo_releases",
+        "owner": "python",
+        "repo": "cpython",
+        "enabled": true
+      }
+    ]
   }
 }
 ```
@@ -151,15 +158,36 @@ All sources are configured under the top-level `sources` key in `config.json`.
 }
 ```
 
+### Telegram
+
+```json
+{
+  "sources": {
+    "telegram": {
+      "enabled": true,
+      "channels": [
+        {
+          "channel": "zaihuapd",
+          "fetch_limit": 20,
+          "enabled": true
+        }
+      ]
+    }
+  }
+}
+```
+
+Telegram uses the public web preview for channels.
+
 ## Filtering
 
-Content is scored 0-10:
+Content is scored from `0` to `10`.
 
-- **9-10**: Groundbreaking - Major breakthroughs, paradigm shifts
-- **7-8**: High Value - Important developments, deep technical content
-- **5-6**: Interesting - Worth knowing but not urgent
-- **3-4**: Low Priority - Generic or routine content
-- **0-2**: Noise - Spam, off-topic, or trivial
+- **9-10**: Groundbreaking
+- **7-8**: High Value
+- **5-6**: Interesting
+- **3-4**: Low Priority
+- **0-2**: Noise
 
 ```json
 {
@@ -170,12 +198,12 @@ Content is scored 0-10:
 }
 ```
 
-- `ai_score_threshold`: Only include content scoring >= this value
-- `time_window_hours`: Fetch content from last N hours
+- `ai_score_threshold`: only include content scoring at or above this value
+- `time_window_hours`: fetch content from the last N hours
 
 ## Environment Variable Substitution
 
-RSS feed URLs support `${VAR_NAME}` syntax for secrets. The variable is expanded at runtime from environment variables (or `.env` file):
+RSS feed URLs support `${VAR_NAME}` syntax:
 
 ```json
 {
@@ -185,4 +213,124 @@ RSS feed URLs support `${VAR_NAME}` syntax for secrets. The variable is expanded
 }
 ```
 
-This way `config.json` can be committed to a public repo without leaking tokens.
+This lets you keep tokens out of `config.json`.
+
+## Email Subscription
+
+Email delivery is optional and disabled unless `email.enabled` is `true`.
+
+```json
+{
+  "email": {
+    "enabled": true,
+    "smtp_server": "smtp.qq.com",
+    "smtp_port": 465,
+    "imap_server": "imap.qq.com",
+    "imap_port": 993,
+    "email_address": "xxx@qq.com",
+    "password_env": "EMAIL_PASSWORD",
+    "sender_name": "Horizon Daily",
+    "subscribe_keyword": "SUBSCRIBE",
+    "unsubscribe_keyword": "UNSUBSCRIBE"
+  }
+}
+```
+
+- `enabled`: enable email delivery and subscription handling
+- `smtp_server` / `smtp_port`: SMTP server used to send mail
+- `imap_server` / `imap_port`: IMAP server used to scan subscription requests
+- `email_address`: sender account and monitored mailbox
+- `password_env`: environment variable holding the email password or app password
+- `sender_name`: display name shown in outgoing emails
+- `subscribe_keyword` / `unsubscribe_keyword`: keywords Horizon reads from incoming subjects
+
+## Webhook Notification
+
+Webhook delivery is optional and disabled unless `webhook.enabled` is `true`.
+
+```json
+{
+  "webhook": {
+    "enabled": true,
+    "url_env": "HORIZON_WEBHOOK_URL",
+    "request_body": {
+      "text": "Horizon #{date}: #{result}\n#{summary?limit=3000&split=---}"
+    },
+    "headers": ""
+  }
+}
+```
+
+- `enabled`: enable webhook delivery
+- `url_env`: environment variable containing the webhook URL
+- `request_body`: if empty, Horizon sends a `GET`; if present, it sends a `POST`
+- `headers`: optional custom headers, one `Key: Value` pair per line
+
+When `request_body` is JSON, Horizon renders placeholders and serializes it as JSON. When it is a string, Horizon renders it directly and detects JSON automatically if the rendered string is valid JSON.
+
+### Webhook Templates
+
+| Variable | Description |
+| --- | --- |
+| `#{date}` | Report date, for example `2026-04-24` |
+| `#{language}` | Language code such as `en` or `zh` |
+| `#{important_items}` | Number of items that passed the threshold |
+| `#{all_items}` | Total number of fetched items |
+| `#{result}` | `success` or `failed` |
+| `#{timestamp}` | Unix timestamp |
+| `#{summary}` | Full summary Markdown |
+
+Use `#{key?limit=N&split=DELIM}` to truncate long values.
+
+```text
+#{summary?limit=3000&split=---}
+```
+
+### DingTalk
+
+```json
+{
+  "msgtype": "markdown",
+  "markdown": {
+    "title": "Horizon #{date} Daily",
+    "text": "Horizon result: #{result}\n\nHorizon important items: #{important_items}/#{all_items}\n\n#{summary}"
+  }
+}
+```
+
+### Feishu / Lark
+
+```json
+{
+  "msg_type": "interactive",
+  "card": {
+    "config": {
+      "wide_screen_mode": true
+    },
+    "header": {
+      "title": {
+        "tag": "plain_text",
+        "content": "Horizon #{date} Daily"
+      },
+      "template": "blue"
+    },
+    "elements": [
+      {
+        "tag": "markdown",
+        "content": "Horizon result: #{result}\nHorizon important items: #{important_items}/#{all_items}"
+      },
+      {
+        "tag": "hr"
+      },
+      {
+        "tag": "markdown",
+        "content": "#{summary?limit=3000&split=---}"
+      }
+    ]
+  }
+}
+```
+
+## Static Site
+
+Horizon writes generated summaries to `data/summaries/` and can copy publishable Markdown into `docs/` for a GitHub Pages site. The repository includes a ready-to-use workflow at `.github/workflows/daily-summary.yml`.

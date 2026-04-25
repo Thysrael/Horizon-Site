@@ -39,10 +39,6 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
     fetchCategoryCounts();
   }, []);
 
-  const getCategoryName = (categoryId: string) => {
-    return CATEGORIES.find((c) => c.id === categoryId)?.name || categoryId;
-  };
-
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

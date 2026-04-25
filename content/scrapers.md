@@ -4,18 +4,18 @@ title: Source Scrapers
 
 # Source Scrapers
 
-Horizon fetches content from four source types. All scrapers inherit from `BaseScraper`, share an async HTTP client, and implement a `fetch(since)` method that returns a list of `ContentItem` objects. Sources are fetched concurrently via `asyncio.gather`.
+Horizon fetches content from five source types. All scrapers inherit from `BaseScraper`, share an async HTTP client, and implement a `fetch(since)` method that returns a list of `ContentItem` objects. Sources are fetched concurrently with `asyncio.gather`.
 
 ## Hacker News
 
 **File**: `src/scrapers/hackernews.py`
 
-Uses the [Firebase HN API](https://hacker-news.firebaseio.com/v0):
+Uses the Firebase HN API:
 
-- `GET /topstories.json` — fetches top story IDs
-- `GET /item/{id}.json` — fetches story/comment details
+- `GET /topstories.json`
+- `GET /item/{id}.json`
 
-Stories and their comments are fetched concurrently. For each story, the top 5 comments are included (deleted/dead comments excluded, HTML stripped, truncated at 500 chars).
+Stories and comments are fetched concurrently. For each story, the top comments are included after filtering deleted or dead entries and stripping HTML.
 
 **Config** (`sources.hackernews`):
 
@@ -27,26 +27,26 @@ Stories and their comments are fetched concurrently. For each story, the top 5 c
 }
 ```
 
-- `fetch_top_stories` — number of top story IDs to fetch
-- `min_score` — minimum HN points to include a story
+- `fetch_top_stories`: number of top story IDs to fetch
+- `min_score`: minimum HN score required
 
-**Extracted data**: title, URL (falls back to HN discussion URL), author, score, comment count, and top comment text.
+**Extracted data**: title, URL, author, score, comment count, and top comment text.
 
 ## GitHub
 
 **File**: `src/scrapers/github.py`
 
-Uses the [GitHub REST API](https://api.github.com):
+Uses the GitHub REST API:
 
-- `GET /users/{username}/events/public` — user activity events
-- `GET /repos/{owner}/{repo}/releases` — repository releases
+- `GET /users/{username}/events/public`
+- `GET /repos/{owner}/{repo}/releases`
 
-Two source types are supported:
+Supported source types:
 
-- **`user_events`** — tracks push, create, release, public, and watch events for a user
-- **`repo_releases`** — tracks new releases for a specific repository
+- `user_events`
+- `repo_releases`
 
-**Config** (`sources.github`, list of entries):
+**Config** (`sources.github`):
 
 ```json
 {
@@ -65,15 +65,15 @@ Two source types are supported:
 }
 ```
 
-**Authentication**: Set `GITHUB_TOKEN` in your environment for higher rate limits (5000 req/hr vs 60 without).
+Set `GITHUB_TOKEN` for higher rate limits.
 
 ## RSS
 
 **File**: `src/scrapers/rss.py`
 
-Fetches any Atom/RSS feed using the `feedparser` library. Tries multiple date fields (`published`, `updated`, `created`) with fallback parsing.
+Fetches Atom and RSS feeds with `feedparser`. It tries multiple timestamp fields such as `published`, `updated`, and `created`.
 
-**Config** (`sources.rss`, list of entries):
+**Config** (`sources.rss`):
 
 ```json
 {
@@ -84,21 +84,21 @@ Fetches any Atom/RSS feed using the `feedparser` library. Tries multiple date fi
 }
 ```
 
-- `category` — optional tag for grouping (e.g., `"programming"`, `"microblog"`)
+- `category`: optional grouping tag
 
-**Extracted data**: title, URL, author, content (from `summary`/`description`/`content` fields), feed name, category, and entry tags.
+**Extracted data**: title, URL, author, content, feed name, category, and entry tags.
 
 ## Reddit
 
 **File**: `src/scrapers/reddit.py`
 
-Uses Reddit's public JSON API (`www.reddit.com`):
+Uses Reddit's public JSON API:
 
-- `GET /r/{subreddit}/{sort}.json` — subreddit posts
-- `GET /user/{username}/submitted.json` — user submissions
-- `GET /r/{subreddit}/comments/{post_id}.json` — post comments
+- `GET /r/{subreddit}/{sort}.json`
+- `GET /user/{username}/submitted.json`
+- `GET /r/{subreddit}/comments/{post_id}.json`
 
-Subreddits and users are fetched concurrently. Comments are sorted by score, limited to the configured count, and exclude moderator-distinguished comments. Self-text is truncated at 1500 chars, comments at 500 chars.
+Subreddits and users are fetched concurrently. Comments are ranked by score and trimmed to the configured limit.
 
 **Config** (`sources.reddit`):
 
@@ -124,10 +124,34 @@ Subreddits and users are fetched concurrently. Comments are sorted by score, lim
 }
 ```
 
-- `sort` — `hot`, `new`, `top`, or `rising` (subreddits); `hot` or `new` (users)
-- `time_filter` — for `top`/`rising` sorts: `hour`, `day`, `week`, `month`, `year`, `all`
-- `min_score` — minimum post score (subreddits only)
-
-**Rate limiting**: Detects HTTP 429 responses, reads the `Retry-After` header, waits, and retries once. Uses a descriptive `User-Agent` as required by Reddit's API guidelines.
+- `sort`: `hot`, `new`, `top`, or `rising` for subreddits; `hot` or `new` for users
+- `time_filter`: for `top` or `rising`
+- `min_score`: minimum subreddit post score
 
 **Extracted data**: title, URL, author, score, upvote ratio, comment count, subreddit, flair, self-text, and top comments.
+
+## Telegram
+
+**File**: `src/scrapers/telegram.py`
+
+Fetches public channel posts from Telegram's web preview pages.
+
+**Config** (`sources.telegram`):
+
+```json
+{
+  "enabled": true,
+  "channels": [
+    {
+      "channel": "zaihuapd",
+      "fetch_limit": 20,
+      "enabled": true
+    }
+  ]
+}
+```
+
+- `channel`: public Telegram channel name
+- `fetch_limit`: number of recent messages to inspect
+
+For each message, Horizon extracts the timestamp, message text, a generated title, the message URL, and the first external link as the canonical URL when available.

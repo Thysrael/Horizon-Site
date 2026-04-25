@@ -19,7 +19,7 @@ const DOCS = [
   {
     slug: "scrapers",
     title: "Source Scrapers",
-    description: "How Horizon collects content from GitHub, Hacker News, RSS, and Reddit",
+    description: "How Horizon collects content from GitHub, Hacker News, RSS, Reddit, and Telegram",
   },
   {
     slug: "api",
