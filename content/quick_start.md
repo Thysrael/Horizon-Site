@@ -86,7 +86,7 @@ Here's what a config looks like:
 }
 ```
 
-For the full reference, see the [Configuration Guide](docs/configuration.md).
+For the full reference, see the [Configuration Guide](/docs/configuration).
 
 **Option C: Browse and pick sources on the official website**
 
@@ -94,7 +94,7 @@ You can search and browse sources you're interested in on the Horizon [official 
 
 Once you've collected sources, export them as a Horizon configuration file:
 
-1. Visit the [Sources](https://www.horizon1123.top//search) page
+1. Visit the [Sources](https://www.horizon1123.top/search) page
 2. Use filters to find sources you want
 3. Click **Export** button to generate `config.json`
 4. Download the configuration file
@@ -141,7 +141,6 @@ If you also want to contribute sources to the Horizon community, you can:
    - **Tags**: Relevant keywords (e.g., "ai", "rust", "security")
 
 Your submission will be reviewed and added to the platform.
-
 
 ## Next Steps
 
