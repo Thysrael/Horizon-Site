@@ -1,14 +1,16 @@
 'use client';
 
+import Image from "next/image";
 import { useState, useCallback } from "react";
-import type { Source } from "@/app/types";
+import type { AdminUser, Source } from "@/app/types";
 import { Status, SourceType, Category } from "@prisma/client";
-import { normalizeTag, isBlockedTag } from "@/app/lib/tags";
+import { isBlockedTag } from "@/app/lib/tags";
 import { TagInput } from "@/app/components/TagInput";
 
 interface AdminDashboardProps {
   initialPendingSources: Source[];
   initialAllSources: Source[];
+  initialUsers: AdminUser[];
   initialStats: {
     total: number;
     pending: number;
@@ -32,17 +34,20 @@ const statusLabels: Record<Status, string> = {
 export default function AdminDashboard({
   initialPendingSources,
   initialAllSources,
+  initialUsers,
   initialStats,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"pending" | "all" | "stats">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "all" | "users" | "stats">("pending");
   const [pendingSources, setPendingSources] = useState<Source[]>(initialPendingSources);
   const [allSources, setAllSources] = useState<Source[]>(initialAllSources);
+  const [users] = useState<AdminUser[]>(initialUsers);
   const [stats, setStats] = useState(initialStats);
   const [loading, setLoading] = useState<Set<string>>(new Set());
   const [filterStatus, setFilterStatus] = useState<Status | "">("");
   const [filterType, setFilterType] = useState<SourceType | "">("");
   const [filterCategory, setFilterCategory] = useState<Category | "">("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [editTags, setEditTags] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -278,7 +283,26 @@ export default function AdminDashboard({
     return true;
   });
 
+  const normalizedUserSearchQuery = userSearchQuery.trim().toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    if (!normalizedUserSearchQuery) {
+      return true;
+    }
+
+    return [user.name, user.email]
+      .filter((value): value is string => Boolean(value))
+      .some((value) => value.toLowerCase().includes(normalizedUserSearchQuery));
+  });
+
   const isLoading = (id: string) => loading.has(id);
+
+  const formatJoinedAt = (value: string) => {
+    return new Intl.DateTimeFormat("en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(new Date(value));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -336,6 +360,16 @@ export default function AdminDashboard({
               }`}
             >
               Statistics
+            </button>
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`flex-1 py-4 px-6 text-sm font-medium transition-colors ${
+                activeTab === "users"
+                  ? "text-orange-600 border-b-2 border-orange-500 bg-orange-50/50"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Users
             </button>
           </div>
 
@@ -541,6 +575,94 @@ export default function AdminDashboard({
                 <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white">
                   <div className="text-3xl font-bold mb-1">{stats.rejected}</div>
                   <div className="text-red-100">Rejected</div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "users" && (
+              <div className="space-y-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">User Directory</h3>
+                    <p className="text-sm text-gray-500">
+                      Browse who joined the community, who contributes sources, and who can access admin.
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500 sm:max-w-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {filteredUsers.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-gray-300 px-6 py-12 text-center text-gray-500 lg:col-span-2">
+                      No users found
+                    </div>
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                      >
+                        <div className="flex items-start gap-4">
+                          {user.image ? (
+                            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
+                              <Image
+                                src={user.image}
+                                alt={user.name || user.email || "User avatar"}
+                                fill
+                                sizes="48px"
+                                unoptimized
+                                className="object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-sm font-semibold text-gray-500">
+                              {(user.name || user.email || "U").slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-base font-semibold text-gray-900">
+                                {user.name || "Unnamed user"}
+                              </h4>
+                              {user.isAdmin && (
+                                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                                  Admin
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 truncate text-sm text-gray-500">
+                              {user.email || "No public email"}
+                            </p>
+                            <p className="mt-2 text-xs text-gray-400">
+                              Joined {formatJoinedAt(user.createdAt)}
+                            </p>
+
+                            <div className="mt-4 grid grid-cols-3 gap-3">
+                              <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                <div className="text-lg font-semibold text-gray-900">{user.sourceCount}</div>
+                                <div className="text-xs text-gray-500">Submissions</div>
+                              </div>
+                              <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                <div className="text-lg font-semibold text-gray-900">{user.approvedSourceCount}</div>
+                                <div className="text-xs text-gray-500">Approved</div>
+                              </div>
+                              <div className="rounded-lg bg-gray-50 px-3 py-2">
+                                <div className="text-lg font-semibold text-gray-900">{user.voteCount}</div>
+                                <div className="text-xs text-gray-500">Votes</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}

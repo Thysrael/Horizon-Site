@@ -1,9 +1,14 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { Source, Status, Category } from "@/app/types";
+import { Source, Status, Category, CommunityStats, AdminUser } from "@/app/types";
 import { normalizeTag } from "./tags";
 import { resolveTagAlias, resolveTagAliasesForSearchQuery } from "./tagAliases";
 import { Prisma } from "@prisma/client";
+
+const GITHUB_REPOS = [
+  { owner: "Thysrael", repo: "Horizon" },
+  { owner: "Thysrael", repo: "Horizon-Site" },
+] as const;
 
 export const getSources = cache(async function getSources(searchQuery?: string) {
   const normalizedQuery = searchQuery ? normalizeTag(searchQuery) : undefined;
@@ -187,6 +192,95 @@ export const getSourceStats = cache(async function getSourceStats(): Promise<{
   ]);
 
   return { total, pending, approved, rejected };
+});
+
+async function getGitHubStarCount(): Promise<number | null> {
+  const responses = await Promise.all(
+    GITHUB_REPOS.map(async ({ owner, repo }) => {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+          headers: {
+            Accept: "application/vnd.github+json",
+            "User-Agent": "horizon-site",
+          },
+          next: { revalidate: 3600 },
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = (await response.json()) as { stargazers_count?: number };
+        return typeof data.stargazers_count === "number" ? data.stargazers_count : null;
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const validCounts = responses.filter((count): count is number => count !== null);
+  if (validCounts.length === 0) {
+    return null;
+  }
+
+  return validCounts.reduce((sum, count) => sum + count, 0);
+}
+
+export const getCommunityStats = cache(async function getCommunityStats(): Promise<CommunityStats> {
+  const [totalUsers, approvedSources, githubStars] = await Promise.all([
+    prisma.user.count(),
+    prisma.source.count({ where: { status: "APPROVED" } }),
+    getGitHubStarCount(),
+  ]);
+
+  return {
+    totalUsers,
+    approvedSources,
+    githubStars,
+  };
+});
+
+export const getAdminUsers = cache(async function getAdminUsers(): Promise<AdminUser[]> {
+  const users = await prisma.user.findMany({
+    orderBy: [
+      { isAdmin: "desc" },
+      { createdAt: "desc" },
+    ],
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      isAdmin: true,
+      createdAt: true,
+      _count: {
+        select: {
+          sources: true,
+          votes: true,
+        },
+      },
+      sources: {
+        where: {
+          status: "APPROVED",
+        },
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  return users.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    isAdmin: user.isAdmin,
+    createdAt: user.createdAt.toISOString(),
+    sourceCount: user._count.sources,
+    approvedSourceCount: user.sources.length,
+    voteCount: user._count.votes,
+  }));
 });
 
 export interface CategoryCount {

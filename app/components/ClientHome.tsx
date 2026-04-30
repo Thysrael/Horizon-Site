@@ -5,11 +5,9 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { Source, Contributor } from "../types";
+import type { Source, Contributor, CommunityStats } from "../types";
 import { TagCloud } from "./TagCloud";
 import { SourceCard } from "./SourceCard";
-import { transformToHorizonConfig } from "@/app/lib/horizonConfig";
-import type { SourceConfig } from "@/app/lib/sourceConfig";
 
 export type { Source, Contributor };
 
@@ -156,11 +154,20 @@ export function AuthButton() {
         onMouseLeave={handleMouseLeave}
       >
         <button className="flex items-center rounded-full p-0.5 hover:bg-gray-100 transition-colors cursor-pointer">
-          <img
-            src={session.user?.image || ""}
-            alt={session.user?.name || "User"}
-            className="h-8 w-8 rounded-full border border-gray-200"
-          />
+          {session.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt={session.user?.name || "User"}
+              width={32}
+              height={32}
+              unoptimized
+              className="h-8 w-8 rounded-full border border-gray-200"
+            />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-500">
+              {(session.user?.name || session.user?.email || "U").slice(0, 1).toUpperCase()}
+            </div>
+          )}
         </button>
 
         <div className={`${isOpen ? "block" : "hidden"} absolute right-0 top-full pt-1`}>
@@ -297,52 +304,70 @@ export function MobileMenu() {
 interface TabViewProps {
   sources: Source[];
   contributors: Contributor[];
+  stats: CommunityStats;
   userVotedSourceIds?: Set<string>;
 }
 
-export function TabView({ sources, contributors, userVotedSourceIds }: TabViewProps) {
-  const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors' | 'tags'>('community');
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: value >= 1000 ? 1 : 0,
+  }).format(value);
+}
+
+export function TabView({ sources, contributors, stats, userVotedSourceIds }: TabViewProps) {
+  const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors' | 'tags' | 'stats'>('stats');
 
   return (
     <div>
       <div className="mb-8 flex justify-center">
-        <div className="inline-flex rounded-full bg-gray-100 p-1">
+        <div className="no-scrollbar -mx-4 flex w-screen snap-x snap-mandatory gap-2 overflow-x-auto px-4 sm:mx-0 sm:w-auto sm:max-w-3xl sm:justify-center sm:overflow-visible sm:rounded-full sm:bg-gray-100 sm:p-1.5">
           <button
             onClick={() => setActiveTab('demo')}
-            className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
+            className={`min-w-fit shrink-0 snap-start rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all sm:border-transparent sm:bg-transparent sm:px-6 sm:text-base ${
               activeTab === 'demo'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-white bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 sm:hover:bg-white/70'
             }`}
           >
             Preview
           </button>
           <button
+            onClick={() => setActiveTab('stats')}
+            className={`min-w-fit shrink-0 snap-start rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all sm:border-transparent sm:bg-transparent sm:px-6 sm:text-base ${
+              activeTab === 'stats'
+                ? 'border-white bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 sm:hover:bg-white/70'
+            }`}
+          >
+            Statistics
+          </button>
+          <button
             onClick={() => setActiveTab('community')}
-            className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
+            className={`min-w-fit shrink-0 snap-start rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all sm:border-transparent sm:bg-transparent sm:px-6 sm:text-base ${
               activeTab === 'community'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-white bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 sm:hover:bg-white/70'
             }`}
           >
             Sources
           </button>
           <button
             onClick={() => setActiveTab('tags')}
-            className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
+            className={`min-w-fit shrink-0 snap-start rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all sm:border-transparent sm:bg-transparent sm:px-6 sm:text-base ${
               activeTab === 'tags'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-white bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 sm:hover:bg-white/70'
             }`}
           >
             Tags
           </button>
           <button
             onClick={() => setActiveTab('contributors')}
-            className={`rounded-full px-6 py-2.5 text-base font-medium transition-all ${
+            className={`min-w-fit shrink-0 snap-start rounded-full border border-gray-200 bg-white px-4 py-2.5 text-center text-sm font-medium transition-all sm:border-transparent sm:bg-transparent sm:px-6 sm:text-base ${
               activeTab === 'contributors'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-white bg-white text-gray-900 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 sm:hover:bg-white/70'
             }`}
           >
             Contributors
@@ -356,9 +381,84 @@ export function TabView({ sources, contributors, userVotedSourceIds }: TabViewPr
         <SourcesTab sources={sources} userVotedSourceIds={userVotedSourceIds} />
       ) : activeTab === 'tags' ? (
         <TagsTab />
+      ) : activeTab === 'stats' ? (
+        <StatisticsTab stats={stats} />
       ) : (
         <ContributorsTab contributors={contributors} />
       )}
+    </div>
+  );
+}
+
+function StatisticsTab({ stats }: { stats: CommunityStats }) {
+  const statCards = [
+    {
+      label: "Curated sources",
+      value: stats.approvedSources,
+      eyebrow: "Signal over noise",
+      valueTone: "text-white",
+      copyTone: "text-orange-100/80",
+      accent: "bg-orange-400",
+    },
+    {
+      label: "GitHub stars",
+      value: stats.githubStars,
+      eyebrow: "Open-source proof",
+      valueTone: "text-white",
+      copyTone: "text-orange-100/80",
+      accent: "bg-amber-400",
+    },
+  ];
+
+  return (
+    <div>
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">Community in numbers</h2>
+        <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+          A quick snapshot of how many people are joining, contributing sources, and backing Horizon in public.
+        </p>
+      </div>
+
+      <div className="mx-auto max-w-[51rem]">
+        <div className="relative overflow-hidden rounded-[1.75rem] bg-gray-950 p-7 text-white shadow-2xl shadow-gray-900/20 sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,146,60,0.42),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(245,158,11,0.18),transparent_38%)]" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-orange-200">
+              <span className="h-2 w-2 rounded-full bg-orange-400" />
+              Live community snapshot
+            </div>
+            <p className="mt-6 max-w-xl text-4xl font-bold tracking-tight sm:text-[3.25rem]">
+              {formatCompactNumber(stats.totalUsers)}+ people are already shaping the feed.
+            </p>
+            <p className="mt-5 max-w-xl text-sm leading-6 text-gray-300 sm:text-base">
+              Horizon works because real people keep adding sharper sources, voting on what matters,
+              and building a stronger signal layer together.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {statCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5 shadow-lg shadow-black/10 backdrop-blur-sm"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-200/90">
+                        {card.eyebrow}
+                      </p>
+                      <p className={`mt-4 text-4xl font-bold tracking-tight sm:text-5xl ${card.valueTone}`}>
+                        {typeof card.value === "number" ? formatCompactNumber(card.value) : "--"}
+                      </p>
+                      <p className={`mt-2 text-sm sm:text-base ${card.copyTone}`}>{card.label}</p>
+                    </div>
+                    <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${card.accent}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -536,9 +636,12 @@ function ContributorsTab({ contributors }: ContributorsTabProps) {
                 className="group flex flex-col items-center gap-3 transition-transform hover:scale-110"
               >
                 <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-gray-200 shadow-md transition-all group-hover:border-orange-500 group-hover:shadow-lg">
-                  <img
+                  <Image
                     src={contributor.image || "https://avatars.githubusercontent.com/u/0?v=4"}
                     alt={contributor.name || "Contributor"}
+                    width={80}
+                    height={80}
+                    unoptimized
                     className="h-full w-full object-cover"
                   />
                 </div>

@@ -1,7 +1,7 @@
 import { Navbar } from "@/app/components/Navbar";
 import { HeroSection } from "@/app/components/HeroSection";
 import { TabsSection } from "@/app/components/TabsSection";
-import { getSources, getContributors, getUserVotedSourceIds } from "@/app/lib/data";
+import { getSources, getContributors, getCommunityStats, getUserVotedSourceIds } from "@/app/lib/data";
 import { auth } from "@/auth";
 
 interface HomePageProps {
@@ -14,9 +14,10 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   const session = await auth();
 
-  const [sources, contributors, userVotedSourceIds] = await Promise.all([
+  const [sources, contributors, communityStats, userVotedSourceIds] = await Promise.all([
     getSources(searchQuery),
     getContributors(),
+    getCommunityStats(),
     session?.user?.id ? getUserVotedSourceIds(session.user.id) : Promise.resolve(new Set<string>()),
   ]);
 
@@ -24,7 +25,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     <div className="min-h-screen bg-white">
       <Navbar searchQuery={searchQuery} />
       <HeroSection />
-      <TabsSection sources={sources} contributors={contributors} userVotedSourceIds={userVotedSourceIds} />
+      <TabsSection sources={sources} contributors={contributors} stats={communityStats} userVotedSourceIds={userVotedSourceIds} />
     </div>
   );
 }

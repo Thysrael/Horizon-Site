@@ -25,6 +25,24 @@ export interface Contributor {
   image: string | null;
 }
 
+export interface CommunityStats {
+  totalUsers: number;
+  approvedSources: number;
+  githubStars: number | null;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+  sourceCount: number;
+  approvedSourceCount: number;
+  voteCount: number;
+}
+
 export interface CategoryInfo {
   id: Category;
   name: string;

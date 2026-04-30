@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { isAdmin } from "@/app/lib/admin";
-import { getPendingSources, getAllSources, getSourceStats } from "@/app/lib/data";
+import { getPendingSources, getAllSources, getSourceStats, getAdminUsers } from "@/app/lib/data";
 import AdminDashboard from "./AdminDashboard";
 import { Navbar } from "@/app/components/Navbar";
 import { Footer } from "@/app/components/Footer";
@@ -22,7 +22,7 @@ export default async function AdminPage() {
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
-            <p className="text-gray-600">You don't have permission to access this page.</p>
+            <p className="text-gray-600">You don&#39;t have permission to access this page.</p>
           </div>
         </main>
         <Footer />
@@ -30,10 +30,11 @@ export default async function AdminPage() {
     );
   }
 
-  const [pendingSources, allSources, stats] = await Promise.all([
+  const [pendingSources, allSources, stats, users] = await Promise.all([
     getPendingSources(),
     getAllSources(),
     getSourceStats(),
+    getAdminUsers(),
   ]);
 
   return (
@@ -44,6 +45,7 @@ export default async function AdminPage() {
           initialPendingSources={pendingSources}
           initialAllSources={allSources}
           initialStats={stats}
+          initialUsers={users}
         />
       </main>
       <Footer />
