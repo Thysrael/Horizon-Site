@@ -317,6 +317,30 @@ function formatCompactNumber(value: number) {
 
 export function TabView({ sources, contributors, stats, userVotedSourceIds }: TabViewProps) {
   const [activeTab, setActiveTab] = useState<'community' | 'demo' | 'contributors' | 'tags' | 'stats'>('stats');
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = contentRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setContentHeight(element.offsetHeight);
+    };
+
+    updateHeight();
+
+    const animationFrame = window.requestAnimationFrame(updateHeight);
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(element);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      observer.disconnect();
+    };
+  }, [activeTab]);
 
   return (
     <div>
@@ -375,17 +399,24 @@ export function TabView({ sources, contributors, stats, userVotedSourceIds }: Ta
         </div>
       </div>
 
-      {activeTab === 'demo' ? (
-        <DemoTab />
-      ) : activeTab === 'community' ? (
-        <SourcesTab sources={sources} userVotedSourceIds={userVotedSourceIds} />
-      ) : activeTab === 'tags' ? (
-        <TagsTab />
-      ) : activeTab === 'stats' ? (
-        <StatisticsTab stats={stats} />
-      ) : (
-        <ContributorsTab contributors={contributors} />
-      )}
+      <div
+        className="min-h-[42rem] transition-[height] duration-300 ease-out sm:min-h-[38rem]"
+        style={contentHeight ? { height: `${contentHeight}px` } : undefined}
+      >
+        <div ref={contentRef}>
+          {activeTab === 'demo' ? (
+            <DemoTab />
+          ) : activeTab === 'community' ? (
+            <SourcesTab sources={sources} userVotedSourceIds={userVotedSourceIds} />
+          ) : activeTab === 'tags' ? (
+            <TagsTab />
+          ) : activeTab === 'stats' ? (
+            <StatisticsTab stats={stats} />
+          ) : (
+            <ContributorsTab contributors={contributors} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
