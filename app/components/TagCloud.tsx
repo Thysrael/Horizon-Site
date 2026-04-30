@@ -41,10 +41,7 @@ export function TagCloud() {
         const response = await fetch("/api/tags?limit=50");
         if (response.ok) {
           const data = await response.json();
-          const sortedTags = (data.tags || [])
-            .sort((a: TagWithCount, b: TagWithCount) => b.count - a.count)
-            .slice(0, 50);
-          setTags(sortedTags);
+          setTags(data.tags || []);
         }
       } catch {
         setTags([]);
