@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import {
   AnimatedLogo,
   AuthButton,
@@ -171,7 +171,9 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
             <span className="text-lg leading-none">+</span>
             <span className="hidden sm:inline">Submit</span>
           </Link>
-          <MobileMenu />
+          <Suspense fallback={<div className="h-10 w-10 md:hidden" />}>
+            <MobileMenu />
+          </Suspense>
         </div>
       </div>
     </nav>
