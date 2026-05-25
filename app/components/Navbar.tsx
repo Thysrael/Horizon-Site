@@ -64,6 +64,7 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
             >
               Sources
               <svg
+                aria-hidden="true"
                 className="h-3 w-3 transition-transform group-hover:rotate-180"
                 fill="none"
                 stroke="currentColor"
@@ -104,6 +105,7 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
             >
               Docs
               <svg
+                aria-hidden="true"
                 className="h-3 w-3 transition-transform group-hover:rotate-180"
                 fill="none"
                 stroke="currentColor"
@@ -151,6 +153,12 @@ export function Navbar({ searchQuery, showSearch = true }: NavbarProps) {
             className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
           >
             About Us
+          </Link>
+          <Link
+            href="/sponsors"
+            className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Sponsors
           </Link>
         </div>
 
