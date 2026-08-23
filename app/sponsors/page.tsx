@@ -4,7 +4,7 @@ import { Navbar } from "@/app/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Sponsors | Horizon",
-  description: "Sponsorship information and current sponsor for Horizon.",
+  description: "Sponsorship information and current sponsors for Horizon.",
 };
 
 export default function SponsorsPage() {
@@ -55,7 +55,7 @@ export default function SponsorsPage() {
           </section>
 
           <section className="mt-10 border-t border-gray-100 pt-10">
-            <h2 className="text-2xl font-semibold text-gray-900">Current sponsor</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">Current sponsors</h2>
 
             <div className="mt-6 rounded-3xl border border-orange-100 bg-orange-50/60 p-6 sm:p-8">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -99,6 +99,53 @@ export default function SponsorsPage() {
                   </p>
                   <p className="mt-4 text-base leading-8 text-gray-700">
                     It supports Claude Code, Codex, and API usage, with enterprise-grade high concurrency, 24/7 technical support, and self-service invoicing. Register through the sponsor link to receive a free RMB 5 trial credit.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-cyan-100 bg-cyan-50/60 p-6 sm:p-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="w-full max-w-[240px] shrink-0">
+                  <a
+                    href="https://go.apimart.ai/gh-horizon"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center rounded-2xl bg-white p-5 shadow-sm ring-1 ring-cyan-100"
+                  >
+                    <Image
+                      src="/sponsors/apimart.jpg"
+                      alt="APIMart logo"
+                      width={2172}
+                      height={724}
+                      className="h-auto w-full"
+                    />
+                  </a>
+
+                  <a
+                    href="https://go.apimart.ai/gh-horizon"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-green-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 hover:opacity-95"
+                  >
+                    Visit sponsor
+                  </a>
+                </div>
+
+                <div className="max-w-3xl">
+                  <a
+                    href="https://go.apimart.ai/gh-horizon"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-2xl font-semibold text-gray-900 hover:text-cyan-700"
+                  >
+                    APIMart
+                  </a>
+                  <p className="mt-4 text-base leading-8 text-gray-700">
+                    Thanks to APIMart for sponsoring this project! APIMart is a low-cost API platform for AI image &amp; video generation: GPT-Image-2 from $0.006/image, 160+ images per dollar.
+                  </p>
+                  <p className="mt-4 text-base leading-8 text-gray-700">
+                    One async API covers both image and video: submit a task, get an ID, and fetch results via polling or callback. Batch tens of thousands of images without timeouts, switch models without changing code, and pay as you go with no monthly fee.
                   </p>
                 </div>
               </div>
