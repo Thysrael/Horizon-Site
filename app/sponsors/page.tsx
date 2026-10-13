@@ -4,10 +4,23 @@ import { Navbar } from "@/app/components/Navbar";
 
 export const metadata: Metadata = {
   title: "Sponsors | Horizon",
-  description: "Meet Modelflare, Horizon's lead sponsor, and supporting sponsors Compshare and OfoxAI.",
+  description: "Meet the lead sponsor and supporting sponsors of Horizon.",
 };
 
-const modelflareUrl = "https://modelflare.dev/sign-up?utm_source=github&utm_campaign=horizon";
+const leadSponsor = {
+  name: "Modelflare",
+  url: "https://modelflare.dev/sign-up?utm_source=github&utm_campaign=horizon",
+  image: "/sponsors/modelflare.png",
+  imageBackground: "#030712",
+  width: 2370,
+  height: 1200,
+  paragraphs: [
+    "Modelflare: Full strength, stable, nothing watered down. Global SOTA models at a lower cost. Operated by US-based Havenbyte LLC, Modelflare supports GPT, Claude, Gemini, Grok, and other leading models through common compatible protocols, plus 40+ image and video models.",
+    "Cache compensation is a highlight: selected OpenAI groups (price-first, stable, and premium) guarantee daily cache hit rates of 65%, 75%, or 85%, and if eligible requests fall short, Modelflare refunds the difference, visible on the usage dashboard after settlement.",
+    "Special offers: a single top-up of US$20 unlocks the GPT discount group at a 0.015x price multiplier, and a single top-up of US$50 unlocks the Claude discount group at a 0.03x multiplier.",
+  ],
+  action: "Register via this exclusive link to get started",
+};
 
 const supportingSponsors = [
   {
@@ -47,63 +60,18 @@ export default function SponsorsPage() {
           </header>
 
           <section aria-labelledby="lead-sponsor" className="mt-10 border-t border-gray-100 pt-10">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 id="lead-sponsor" className="text-2xl font-semibold text-gray-900">Lead sponsor</h2>
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-800">Featured partner</span>
-            </div>
-
-            <article className="mt-6 overflow-hidden rounded-3xl border border-orange-200 bg-white shadow-lg shadow-orange-100/50">
-              <div className="grid items-center gap-6 bg-gradient-to-br from-orange-50 to-amber-50 p-6 sm:p-8 md:grid-cols-2">
-                <div>
-                  <h3 className="text-sm font-semibold uppercase tracking-widest text-orange-700">Modelflare</h3>
-                  <p className="mt-4 text-3xl font-bold leading-tight tracking-tight text-gray-900 sm:text-4xl">
-                    Full strength. Stable.<br />Nothing watered down.
-                  </p>
-                  <p className="mt-4 text-base leading-7 text-gray-600">Global SOTA models at a lower cost.</p>
-                  <p className="mt-5 text-sm font-medium leading-7 text-gray-700">GPT · Claude · Gemini · Grok<br />40+ image and video models</p>
-                </div>
-                <a href={modelflareUrl} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl bg-gray-950 shadow-sm ring-1 ring-orange-100 transition-shadow hover:shadow-md">
-                  <Image src="/sponsors/modelflare.png" alt="Modelflare" width={2370} height={1200} sizes="(max-width: 767px) 100vw, 400px" className="h-auto w-full" />
-                </a>
-              </div>
-
-              <div className="p-6 sm:p-8">
-                <p className="text-lg font-semibold text-gray-900">Thanks to Modelflare for sponsoring this project!</p>
-                <p className="mt-4 text-base leading-8 text-gray-600">
-                  Operated by US-based Havenbyte LLC, Modelflare supports GPT, Claude, Gemini, Grok, and other leading models through common compatible protocols, plus 40+ image and video models.
-                </p>
-                <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-5 sm:p-6">
-                  <h4 className="font-semibold text-gray-900">Daily cache hit guarantees</h4>
-                  <dl className="mt-4 grid grid-cols-3 gap-3">
-                    {[
-                      { label: "Price-first", rate: "65%" },
-                      { label: "Stable", rate: "75%" },
-                      { label: "Premium", rate: "85%" },
-                    ].map(({ label, rate }) => (
-                      <div key={label}>
-                        <dt className="text-xs font-medium text-gray-500 sm:text-sm">{label}</dt>
-                        <dd className="mt-1 text-2xl font-bold tracking-tight text-orange-700 sm:text-3xl">{rate}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <p className="mt-4 text-sm leading-7 text-gray-600">
-                    Selected OpenAI groups guarantee these daily cache hit rates. If eligible requests fall short, Modelflare refunds the difference, visible on the usage dashboard after settlement.
-                  </p>
-                </div>
-                <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-orange-50 p-5">
-                    <h4 className="font-semibold text-gray-900">GPT discount group</h4>
-                    <p className="mt-2 text-sm leading-7 text-gray-700">A single top-up of <strong>US$20</strong> unlocks a <strong>0.015x</strong> price multiplier.</p>
-                  </div>
-                  <div className="rounded-2xl bg-orange-50 p-5">
-                    <h4 className="font-semibold text-gray-900">Claude discount group</h4>
-                    <p className="mt-2 text-sm leading-7 text-gray-700">A single top-up of <strong>US$50</strong> unlocks a <strong>0.03x</strong> price multiplier.</p>
-                  </div>
-                </div>
-                <a href={modelflareUrl} target="_blank" rel="noreferrer" className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 hover:opacity-95 sm:w-auto">
-                  Register via our exclusive link <span aria-hidden="true" className="ml-2">→</span>
-                </a>
-              </div>
+            <h2 id="lead-sponsor" className="text-2xl font-semibold text-gray-900">Lead sponsor</h2>
+            <article className="mt-6">
+              <a href={leadSponsor.url} target="_blank" rel="noreferrer" className="block" style={{ backgroundColor: leadSponsor.imageBackground }}>
+                <Image src={leadSponsor.image} alt={leadSponsor.name} width={leadSponsor.width} height={leadSponsor.height} sizes="(max-width: 767px) 100vw, 864px" className="h-auto max-h-72 w-full object-contain" />
+              </a>
+              <h3 className="mt-6 text-lg font-semibold text-gray-900">Thanks to {leadSponsor.name} for sponsoring this project!</h3>
+              {leadSponsor.paragraphs.map((paragraph) => (
+                <p key={paragraph} className="mt-4 text-base leading-8 text-gray-600">{paragraph}</p>
+              ))}
+              <a href={leadSponsor.url} target="_blank" rel="noreferrer" className="mt-4 inline-block font-medium text-orange-700 underline decoration-orange-200 underline-offset-4 hover:text-orange-800">
+                {leadSponsor.action}
+              </a>
             </article>
           </section>
 
