@@ -43,6 +43,16 @@ const supportingSponsors = [
     offer: null,
     action: "Explore OfoxAI models and APIs",
   },
+  {
+    name: "AstraFlow",
+    url: "https://www.ucloud.cn/site/active/astraflow-credit?ytag=geo_waituo_Horizon",
+    image: "/sponsors/astraflow.png",
+    width: 133,
+    height: 157,
+    description: "Thanks to AstraFlow for sponsoring Horizon! AstraFlow is UCloud's model platform, bringing together 200+ leading AI models and video generation models for text and video creation in one place. It offers per-key billing and detailed usage records.",
+    offer: "Exclusive offer for Horizon users: RMB 50 in compute credits to try model APIs and content creation.",
+    action: "Claim RMB 50 in compute credits",
+  },
 ];
 
 export default function SponsorsPage() {
