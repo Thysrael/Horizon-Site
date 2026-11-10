@@ -53,6 +53,17 @@ const supportingSponsors = [
     offer: "Exclusive offer for Horizon users: RMB 50 in compute credits to try model APIs and content creation.",
     action: "Claim RMB 50 in compute credits",
   },
+  {
+    name: "APIXO",
+    url: "https://apixo.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=github_readme&utm_content=thysrael_horizon",
+    actionUrl: "https://apixo.ai/models/seedream-5-5?utm_source=github&utm_medium=sponsorship&utm_campaign=github_readme&utm_content=thysrael_horizon",
+    image: "/sponsors/apixo.png",
+    width: 900,
+    height: 360,
+    description: "APIXO is an all-in-one AI image and video creation platform bringing together multiple models. Create directly in your browser without coding, or integrate models into your applications and automated workflows via API.",
+    offer: "Get early access to Seedream 5.5, with 1K text-to-image generation starting at just $0.014 per image, 30% off the official price. The discount applies automatically, with no promo code required. Offer ends December 31, 2026 at 23:59 Beijing time (UTC+8).",
+    action: "Explore APIXO models and offers",
+  },
 ];
 
 export default function SponsorsPage() {
@@ -97,7 +108,7 @@ export default function SponsorsPage() {
                     <h3 className="text-xl font-semibold text-gray-900">{sponsor.name}</h3>
                     <p className="mt-3 text-sm leading-7 text-gray-600">{sponsor.description}</p>
                     {sponsor.offer && <p className="mt-3 text-sm leading-7 text-gray-600">{sponsor.offer}</p>}
-                    <a href={sponsor.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center text-sm font-semibold text-orange-700 underline decoration-orange-200 underline-offset-4 hover:text-orange-800">
+                    <a href={sponsor.actionUrl ?? sponsor.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center text-sm font-semibold text-orange-700 underline decoration-orange-200 underline-offset-4 hover:text-orange-800">
                       {sponsor.action} <span aria-hidden="true" className="ml-2">→</span>
                     </a>
                   </div>
