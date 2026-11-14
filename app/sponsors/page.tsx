@@ -54,15 +54,18 @@ const supportingSponsors = [
     action: "Claim RMB 50 in compute credits",
   },
   {
-    name: "APIXO",
-    url: "https://apixo.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=github_readme&utm_content=thysrael_horizon",
-    actionUrl: "https://apixo.ai/models/seedream-5-5?utm_source=github&utm_medium=sponsorship&utm_campaign=github_readme&utm_content=thysrael_horizon",
-    image: "/sponsors/apixo.png",
-    width: 900,
-    height: 360,
-    description: "APIXO is an all-in-one AI image and video creation platform bringing together multiple models. Create directly in your browser without coding, or integrate models into your applications and automated workflows via API.",
-    offer: "Get early access to Seedream 5.5, with 1K text-to-image generation starting at just $0.014 per image, 30% off the official price. The discount applies automatically, with no promo code required. Offer ends December 31, 2026 at 23:59 Beijing time (UTC+8).",
-    action: "Explore APIXO models and offers",
+    name: "APIXO AI",
+    url: "https://apixo.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=horizon&utm_content=brand_mention",
+    actionUrl: "https://apixo.ai/deals/black-friday?utm_source=github&utm_medium=sponsorship&utm_campaign=horizon&utm_content=black_friday",
+    image: "/sponsors/apixo-ai-stacked-on-black.png",
+    width: 256,
+    height: 256,
+    logoWidth: 90,
+    title: <><a href="https://apixo.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=horizon&utm_content=brand_mention" target="_blank" rel="noreferrer">APIXO AI</a>: All-in-One AI Video Maker &amp; Multimodal Creation Platform</>,
+    description: "Create 4K cinematic videos and high-fidelity visuals easily on the web, or scale via robust enterprise APIs.",
+    offer: <>🔥 <strong><a href="https://apixo.ai/models/seedream-5-5?utm_source=github&utm_medium=sponsorship&utm_campaign=horizon&utm_content=seedream_5_5" target="_blank" rel="noreferrer" className="underline">Seedream 5.5</a> Text-to-Image API: 30% OFF official rate, from $0.014/image!</strong></>,
+    note: "Seamlessly integrated with Seedance 2.5 video generation.",
+    action: "👉 Explore APIXO Black Friday Deals & Free Credits",
   },
 ];
 
@@ -102,12 +105,13 @@ export default function SponsorsPage() {
               {supportingSponsors.map((sponsor) => (
                 <article key={sponsor.name} className="grid gap-5 p-6 sm:grid-cols-[180px_1fr] sm:gap-8">
                   <a href={sponsor.url} target="_blank" rel="noreferrer" className="flex min-h-28 items-center justify-center self-start rounded-xl border border-gray-100 bg-white p-4 transition-colors hover:border-orange-200">
-                    <Image src={sponsor.image} alt={`${sponsor.name} logo`} width={sponsor.width} height={sponsor.height} sizes="180px" className="h-auto max-h-28 w-full max-w-[180px] object-contain" />
+                    <Image src={sponsor.image} alt={`${sponsor.name} logo`} width={sponsor.width} height={sponsor.height} sizes="180px" style={{ maxWidth: sponsor.logoWidth }} className="h-auto max-h-28 w-full max-w-[180px] object-contain" />
                   </a>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{sponsor.name}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900">{sponsor.title ?? sponsor.name}</h3>
                     <p className="mt-3 text-sm leading-7 text-gray-600">{sponsor.description}</p>
                     {sponsor.offer && <p className="mt-3 text-sm leading-7 text-gray-600">{sponsor.offer}</p>}
+                    {sponsor.note && <p className="mt-3 text-sm leading-7 text-gray-600">{sponsor.note}</p>}
                     <a href={sponsor.actionUrl ?? sponsor.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center text-sm font-semibold text-orange-700 underline decoration-orange-200 underline-offset-4 hover:text-orange-800">
                       {sponsor.action} <span aria-hidden="true" className="ml-2">→</span>
                     </a>
